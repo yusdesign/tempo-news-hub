@@ -1,6 +1,5 @@
-<!-- app/src/main/res/values/colors.xml -->
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#2196F3</color>  <!-- Blue background -->
-    <color name="ic_launcher_foreground">#FFFFFF</color>   <!-- White foreground -->
-</resources> 
+    <color name="ic_launcher_background">#2196F3</color>
+    <color name="ic_launcher_foreground">#FFFFFF</color>
+</resources>
