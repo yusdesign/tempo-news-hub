@@ -1,0 +1,32 @@
+# Built files
+*.apk
+*.aab
+*.ap_
+*.aab
+
+# Build outputs
+/build/
+/app/build/
+/tempo-lib/build/
+
+# Gradle
+.gradle/
+gradle-app.setting
+
+# Local configuration
+local.properties
+*.keystore
+*.jks
+
+# IDE files
+.idea/
+*.iml
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Rust
+/target/
+**/*.rs.bk
