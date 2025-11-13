@@ -30,6 +30,11 @@ android {
         sourceCompatibility JavaVersion.VERSION_21
         targetCompatibility JavaVersion.VERSION_21
     }
+    
+    // Add this for Gradle 9.2 compatibility
+    buildFeatures {
+        buildConfig true
+    }
 }
 
 dependencies {
@@ -40,5 +45,4 @@ dependencies {
     
     implementation 'com.google.dagger:hilt-android:2.48.1'
     annotationProcessor 'com.google.dagger:hilt-compiler:2.48.1'
-}
-    
+}   
