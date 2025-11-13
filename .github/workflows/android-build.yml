@@ -1,3 +1,4 @@
+# .github/workflows/android-build.yml
 name: Android CI
 
 on:
@@ -23,21 +24,16 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
+
     - name: Build with Gradle
-      run: |
-        chmod +x gradlew
-        ./gradlew assembleDebug
+      run: ./gradlew assembleDebug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: tempo-news-app
         path: app/build/outputs/apk/debug/app-debug.apk
-        retention-days: 7
-
-    - name: Upload build reports
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-reports
-        path: app/build/reports/
-        retention-days: 7
+        retention-days: 7  
+ 

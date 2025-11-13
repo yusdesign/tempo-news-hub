@@ -16,4 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "TempoNewsHub"
 include ':app'
-// include ':tempo-lib'  # Comment out for now until we fix Rust build
+
