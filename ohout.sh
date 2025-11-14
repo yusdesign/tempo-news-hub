@@ -1,0 +1,48 @@
+# Create activity_main.xml layout
+mkdir -p app/src/main/res/layout
+
+cat > app/src/main/res/layout/activity_main.xml << 'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center"
+    android:background="#F5F5F5">
+
+    <TextView
+        android:id="@+id/time_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="64sp"
+        android:text="🌅" />
+
+    <TextView
+        android:id="@+id/greeting_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="28sp"
+        android:text="Hello"
+        android:textStyle="bold"
+        android:layout_marginTop="24dp"
+        android:textColor="#333333" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tempo News Hub"
+        android:textSize="18sp"
+        android:layout_marginTop="16dp"
+        android:textColor="#666666" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🚀 Build Successful!"
+        android:textSize="14sp"
+        android:layout_marginTop="32dp"
+        android:textColor="#2196F3" />
+
+</LinearLayout>
+EOF
