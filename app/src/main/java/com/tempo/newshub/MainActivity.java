@@ -44,19 +44,20 @@ public class MainActivity extends AppCompatActivity {
     private void setupNewsFeed() {
         newsRecyclerView = findViewById(R.id.news_recycler_view);
         newsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        
-        // Sample data for Step 1
+
         List<NewsItem> sampleNews = Arrays.asList(
             new NewsItem("📰", "Welcome to Tempo News", 
-                        "Your qualia-sorted news experience begins here", "System", "Now"),
+                    "Your qualia-sorted news hub is running!", "System", "Now", 0.95),
             new NewsItem("💡", "Step 1 Complete", 
-                        "Basic RecyclerView with sample data is working", "Progress", "1m ago"),
+                    "Stable app foundation achieved", "Progress", "Now", 0.90),
             new NewsItem("🎯", "Next: RSS Feeds", 
-                        "Real news parsing coming in Step 2", "Roadmap", "2m ago"),
+                    "Time-aware news aggregation coming soon", "Roadmap", "Now", 0.85),
             new NewsItem("🌅", "Time-Aware Design", 
-                        "App adapts to morning/evening rhythms", "Feature", "3m ago")
+                    "Content adapts to your daily rhythm", "Feature", "Now", 0.88),
+            new NewsItem("🧠", "Qualia Engine", 
+                    "Smart filtering for meaningful content", "Core", "Now", 0.92)
         );
-        
+                
         NewsAdapter newsAdapter = new NewsAdapter(sampleNews);
         newsRecyclerView.setAdapter(newsAdapter);
     }
