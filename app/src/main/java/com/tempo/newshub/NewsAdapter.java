@@ -1,3 +1,4 @@
+// app/src/main/java/com/tempo/newshub/NewsAdapter.java
 package com.tempo.newshub;
 
 import android.view.LayoutInflater;
@@ -27,20 +28,11 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsViewHolder
     @Override
     public void onBindViewHolder(@NonNull NewsViewHolder holder, int position) {
         NewsItem item = newsItems.get(position);
-        
         holder.newsIcon.setText(item.getIcon());
         holder.newsTitle.setText(item.getTitle());
         holder.newsDescription.setText(item.getDescription());
         holder.newsSource.setText(item.getSource());
         holder.newsTime.setText(item.getTime());
-        
-        // Show usefulness if high enough
-        if (item.getUsefulnessScore() > 0.8) {
-            holder.usefulnessIndicator.setText("🎯 " + (int)(item.getUsefulnessScore() * 100) + "%");
-            holder.usefulnessIndicator.setVisibility(View.VISIBLE);
-        } else {
-            holder.usefulnessIndicator.setVisibility(View.GONE);
-        }
     }
     
     @Override
@@ -49,7 +41,7 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsViewHolder
     }
     
     static class NewsViewHolder extends RecyclerView.ViewHolder {
-        TextView newsIcon, newsTitle, newsDescription, newsSource, newsTime, usefulnessIndicator;
+        TextView newsIcon, newsTitle, newsDescription, newsSource, newsTime;
         
         public NewsViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -58,7 +50,6 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsViewHolder
             newsDescription = itemView.findViewById(R.id.news_description);
             newsSource = itemView.findViewById(R.id.news_source);
             newsTime = itemView.findViewById(R.id.news_time);
-            usefulnessIndicator = itemView.findViewById(R.id.usefulness_indicator);
         }
     }
 }

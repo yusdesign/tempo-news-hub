@@ -1,4 +1,7 @@
-// Update MainActivity.java
+cd ~/tempo
+
+# Create the corrected MainActivity.java
+cat > app/src/main/java/com/tempo/newshub/MainActivity.java << 'EOF'
 package com.tempo.newshub;
 
 import android.os.Bundle;
@@ -12,7 +15,9 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     
+    private TextView timeIcon, greetingText;
     private RecyclerView newsRecyclerView;
+    private NewsAdapter newsAdapter;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,9 +29,10 @@ public class MainActivity extends AppCompatActivity {
     }
     
     private void setupTimeBasedUI() {
-        TextView timeIcon = findViewById(R.id.time_icon);
-        TextView greetingText = findViewById(R.id.greeting_text);
+        timeIcon = findViewById(R.id.time_icon);
+        greetingText = findViewById(R.id.greeting_text);
         
+        // Simple time-based logic
         int hour = LocalTime.now().getHour();
         
         if (hour >= 5 && hour < 12) {
@@ -45,19 +51,18 @@ public class MainActivity extends AppCompatActivity {
         newsRecyclerView = findViewById(R.id.news_recycler_view);
         newsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         
-        // Sample data for Step 1
+        // Sample data - replace with your qualia-sorted data
         List<NewsItem> sampleNews = Arrays.asList(
-            new NewsItem("📰", "Welcome to Tempo News", 
-                        "Your qualia-sorted news experience begins here", "System", "Now"),
-            new NewsItem("💡", "Step 1 Complete", 
-                        "Basic RecyclerView with sample data is working", "Progress", "1m ago"),
-            new NewsItem("🎯", "Next: RSS Feeds", 
-                        "Real news parsing coming in Step 2", "Roadmap", "2m ago"),
-            new NewsItem("🌅", "Time-Aware Design", 
-                        "App adapts to morning/evening rhythms", "Feature", "3m ago")
+            new NewsItem("💡", "Pattern: Simple solutions often overlooked", 
+                        "The most elegant ideas hide in plain sight", "Insight", "2h ago", 0.87),
+            new NewsItem("🔄", "Contradictions fuel innovation", 
+                        "Opposing ideas create breakthrough friction", "Paradox", "4h ago", 0.92),
+            new NewsItem("🎯", "Happiness through making", 
+                        "Creation itself generates joy", "Principle", "1h ago", 0.95)
         );
         
-        NewsAdapter newsAdapter = new NewsAdapter(sampleNews);
+        newsAdapter = new NewsAdapter(sampleNews);
         newsRecyclerView.setAdapter(newsAdapter);
     }
 }
+EOF

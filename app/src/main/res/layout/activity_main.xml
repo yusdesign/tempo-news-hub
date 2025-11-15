@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:background="#F5F5F5">
 
-    <!-- Header with elevation for modern look -->
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -40,7 +40,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Qualia-Sorted Insights"
+                android:text="Step 1: Basic News Feed"
                 android:textSize="14sp"
                 android:textColor="#666666"/>
 
@@ -48,39 +48,11 @@
 
     </LinearLayout>
 
-    <!-- Simple content area for now (remove RecyclerView temporarily) -->
-    <LinearLayout
+    <!-- News Feed -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/news_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="24dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🚀 Build Successful!"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="#4CAF50"
-            android:layout_marginBottom="16dp"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="✅ App is running\n🎯 Qualia engine ready\n📰 News feed coming soon"
-            android:textSize="16sp"
-            android:textColor="#666666"
-            android:gravity="center"
-            android:lineSpacingExtra="8dp"/>
-
-        <ProgressBar
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:indeterminate="true"/>
-
-    </LinearLayout>
+        android:layout_weight="1"/>
 
 </LinearLayout>
