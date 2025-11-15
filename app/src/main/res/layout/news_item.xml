@@ -4,28 +4,48 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="16dp"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="?android:attr/selectableItemBackground">
 
     <TextView
-        android:id="@+id/titleTextView"
+        android:id="@+id/news_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:text="News Title" />
 
     <TextView
-        android:id="@+id/descriptionTextView" 
+        android:id="@+id/news_description"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="14sp"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"
+        android:text="News description goes here..." />
 
-    <TextView
-        android:id="@+id/dateTextView"
-        android:layout_width="match_parent" 
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="12sp"
-        android:textColor="#666"
-        android:layout_marginTop="4dp" />
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <TextView
+            android:id="@+id/news_source"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="#666"
+            android:text="Source" />
+
+        <TextView
+            android:id="@+id/news_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="#666"
+            android:layout_marginStart="16dp"
+            android:text="2 hours ago" />
+
+    </LinearLayout>
 
 </LinearLayout>

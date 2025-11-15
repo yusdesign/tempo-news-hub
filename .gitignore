@@ -32,3 +32,16 @@ Thumbs.db
 /target/
 **/*.rs.bk
 local.properties
+
+# Debug scripts
+scripts/
+*.sh
+
+# Android build files
+.build/
+app/build/
+
+# Local configuration
+local.properties
+*.orig
+*.bak
