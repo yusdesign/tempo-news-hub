@@ -3,56 +3,31 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F5F5F5">
+    android:gravity="center"
+    android:background="#F0F0F0"
+    android:padding="20dp">
 
-    <!-- Header -->
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/time_icon"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:background="#FFFFFF"
-        android:elevation="4dp">
+        android:text="🌅"
+        android:textSize="48sp" />
 
-        <TextView
-            android:id="@+id/time_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🌅"
-            android:textSize="24sp"
-            android:layout_marginEnd="12dp"/>
+    <TextView
+        android:id="@+id/greeting_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hello"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp" />
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/greeting_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Good Morning"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#333333"/>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Step 1: Basic News Feed"
-                android:textSize="14sp"
-                android:textColor="#666666"/>
-
-        </LinearLayout>
-
-    </LinearLayout>
-
-    <!-- News Feed -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/news_recycler_view"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tempo News Hub v1.0.1"
+        android:textSize="14sp"
+        android:layout_marginTop="8dp" />
 
 </LinearLayout>
