@@ -1,28 +1,40 @@
 package com.tempo.newshub;
 
-import android.graphics.Color;
 import android.os.Bundle;
-import android.widget.TextView;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
+    
+    private WebView webView;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        TextView textView = new TextView(this);
-        textView.setText("🎉 TEMPO NEWS HUB\n\n" +
-                        "✅ Pure Java UI\n" +
-                        "🚀 No XML Dependencies\n" +
-                        "📱 Running Successfully\n\n" +
-                        "Version: 1.0.2");
-        textView.setTextSize(18);
-        textView.setTextColor(Color.DKGRAY);
-        textView.setBackgroundColor(Color.LTGRAY);
-        textView.setPadding(50, 50, 50, 50);
-        textView.setLineSpacing(1.5f, 1.5f);
+        // Create WebView programmatically - NO XML
+        webView = new WebView(this);
         
-        setContentView(textView);
+        // Enable JavaScript
+        webView.getSettings().setJavaScriptEnabled(true);
+        
+        // Keep navigation in the app
+        webView.setWebViewClient(new WebViewClient());
+        
+        // Load our local HTML file
+        webView.loadUrl("file:///android_asset/news_app.html");
+        
+        setContentView(webView);
+    }
+    
+    @Override
+    public void onBackPressed() {
+        // Handle back button in WebView
+        if (webView.canGoBack()) {
+            webView.goBack();
+        } else {
+            super.onBackPressed();
+        }
     }
 }

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📰 Tempo News Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .time-icon {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+        
+        .greeting {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .news-grid {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .news-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+        
+        .news-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .news-icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        .news-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .news-desc {
+            color: #666;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+        
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .qualia-badge {
+            background: #4CAF50;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+        
+        .loading {
+            text-align: center;
+            color: white;
+            padding: 40px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="time-icon" id="timeIcon">🌅</div>
+            <div class="greeting" id="greeting">Good Morning</div>
+            <div class="subtitle">Qualia-Sorted News Hub</div>
+        </div>
+        
+        <div class="news-grid" id="newsGrid">
+            <div class="loading">
+                🚀 Loading your personalized news...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Time-based theming
+        function updateTimeBasedUI() {
+            const hour = new Date().getHours();
+            const timeIcon = document.getElementById('timeIcon');
+            const greeting = document.getElementById('greeting');
+            
+            if (hour >= 5 && hour < 12) {
+                timeIcon.textContent = '🌅';
+                greeting.textContent = 'Good Morning';
+                document.body.style.background = 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)';
+            } else if (hour >= 12 && hour < 18) {
+                timeIcon.textContent = '🏙️';
+                greeting.textContent = 'Good Afternoon';
+                document.body.style.background = 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)';
+            } else {
+                timeIcon.textContent = '🌃';
+                greeting.textContent = 'Good Evening';
+                document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            }
+        }
+        
+        // Qualia-sorted news data
+        const newsData = [
+            {
+                icon: '💡',
+                title: 'Pattern Recognition: Simple solutions often overlooked',
+                description: 'The most elegant ideas are usually hiding in plain sight, waiting for the right perspective to reveal them.',
+                source: 'Insight Engine',
+                time: '2h ago',
+                usefulness: 92
+            },
+            {
+                icon: '🔄',
+                title: 'Contradictions as Innovation Fuel',
+                description: 'Opposing ideas create the creative friction that sparks genuine breakthroughs and new paradigms.',
+                source: 'Paradox Core',
+                time: '4h ago', 
+                usefulness: 88
+            },
+            {
+                icon: '🎯',
+                title: 'Happiness Through Making',
+                description: 'The act of creation itself generates more joy than the finished product. Build to be happy.',
+                source: 'Joy Principle',
+                time: '1h ago',
+                usefulness: 95
+            },
+            {
+                icon: '🌊',
+                title: 'Flow State Accessibility',
+                description: 'Deep focus is not a rare gift but a trainable skill available to anyone with intentional practice.',
+                source: 'Focus Lab',
+                time: '6h ago',
+                usefulness: 85
+            }
+        ];
+        
+        // Display news
+        function displayNews() {
+            const grid = document.getElementById('newsGrid');
+            grid.innerHTML = '';
+            
+            newsData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'news-card';
+                card.innerHTML = `
+                    <div class="news-title">
+                        <span class="news-icon">${item.icon}</span>
+                        ${item.title}
+                    </div>
+                    <div class="news-desc">${item.description}</div>
+                    <div class="news-meta">
+                        <span>${item.source} • ${item.time}</span>
+                        <span class="qualia-badge">🎯 ${item.usefulness}%</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+        
+        // Initialize
+        updateTimeBasedUI();
+        setTimeout(displayNews, 1000); // Simulate loading
+        
+        // Update time every minute
+        setInterval(updateTimeBasedUI, 60000);
+    </script>
+</body>
+</html>
