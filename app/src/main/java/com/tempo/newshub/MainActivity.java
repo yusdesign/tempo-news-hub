@@ -19,13 +19,16 @@ public class MainActivity extends AppCompatActivity {
             webView.getSettings().setJavaScriptEnabled(true);
             webView.getSettings().setDomStorageEnabled(true);
             webView.setWebViewClient(new WebViewClient());
-            webView.loadUrl("file:///android_asset/news_app.html");
+            
+            // SIMPLE HTML THAT CAN'T FAIL
+            String simpleHTML = "<html><body style='background: #4CAF50; color: white; padding: 50px;'><h1>✅ IT WORKS!</h1><p>WebView is working!</p></body></html>";
+            webView.loadData(simpleHTML, "text/html", "UTF-8");
             
             setContentView(webView);
-            Toast.makeText(this, "📰 WebView Loaded!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "📰 HTML LOADED!", Toast.LENGTH_SHORT).show();
             
         } catch (Exception e) {
-            Toast.makeText(this, "❌ WebView Failed!", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "❌ Crash: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 }
