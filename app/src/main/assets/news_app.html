@@ -5,17 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📰 Tempo News Hub</title>
     <style>
+        :root {
+            --morning-bg: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            --day-bg: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            --evening-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --night-bg: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+        }
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            transition: all 0.3s ease;
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', system-ui, sans-serif;
             min-height: 100vh;
             padding: 20px;
+        }
+        
+        .time-aware-body {
+            background: var(--day-bg);
+            color: #333;
         }
         
         .container {
@@ -25,191 +37,339 @@
         
         .header {
             background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
+            backdrop-filter: blur(10px);
+            padding: 30px;
             border-radius: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
         .time-icon {
             font-size: 4em;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
         
         .greeting {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
+            font-size: 2em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
         }
         
         .subtitle {
             color: #666;
-            font-size: 1.1em;
+            font-size: 1.2em;
+            font-weight: 300;
+        }
+        
+        .qualia-badge {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
         }
         
         .news-grid {
             display: grid;
-            gap: 15px;
+            gap: 20px;
         }
         
         .news-card {
             background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease;
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
         
         .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .news-card:active {
             transform: translateY(-2px);
         }
         
         .news-icon {
-            font-size: 1.5em;
-            margin-right: 10px;
+            font-size: 1.8em;
+            margin-right: 15px;
             vertical-align: middle;
         }
         
         .news-title {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 8px;
-            font-size: 1.1em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 1.3em;
+            line-height: 1.4;
         }
         
         .news-desc {
-            color: #666;
-            line-height: 1.4;
-            margin-bottom: 10px;
+            color: #5d6d7e;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-size: 1.05em;
         }
         
         .news-meta {
             display: flex;
             justify-content: space-between;
-            color: #888;
-            font-size: 0.9em;
+            align-items: center;
+            color: #7f8c8d;
+            font-size: 0.95em;
         }
         
-        .qualia-badge {
-            background: #4CAF50;
+        .usefulness-badge {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
             color: white;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .high-usefulness {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+        
+        .medium-usefulness {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
         }
         
         .loading {
             text-align: center;
-            color: white;
-            padding: 40px;
-            font-size: 1.2em;
+            color: rgba(255, 255, 255, 0.9);
+            padding: 60px 20px;
+            font-size: 1.3em;
         }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Time-based themes */
+        .morning-theme { background: var(--morning-bg); color: #2c3e50; }
+        .day-theme { background: var(--day-bg); color: #2c3e50; }
+        .evening-theme { background: var(--evening-bg); color: white; }
+        .night-theme { background: var(--night-bg); color: white; }
+        
+        .morning-theme .news-card { background: rgba(255, 255, 255, 0.95); }
+        .day-theme .news-card { background: rgba(255, 255, 255, 0.95); }
+        .evening-theme .news-card { background: rgba(255, 255, 255, 0.15); color: white; }
+        .night-theme .news-card { background: rgba(255, 255, 255, 0.1); color: white; }
+        
+        .evening-theme .news-title,
+        .night-theme .news-title { color: white; }
+        
+        .evening-theme .news-desc,
+        .night-theme .news-desc { color: rgba(255, 255, 255, 0.8); }
     </style>
 </head>
-<body>
+<body class="time-aware-body">
     <div class="container">
         <div class="header">
             <div class="time-icon" id="timeIcon">🌅</div>
             <div class="greeting" id="greeting">Good Morning</div>
-            <div class="subtitle">Qualia-Sorted News Hub</div>
+            <div class="subtitle">Qualia-Sorted Intelligence Hub</div>
+            <div class="qualia-badge">🎯 Personalized for This Moment</div>
         </div>
         
         <div class="news-grid" id="newsGrid">
-            <div class="loading">
-                🚀 Loading your personalized news...
+            <div class="loading pulse">
+                <div style="font-size: 2em; margin-bottom: 15px;">⚡</div>
+                Tuning into your cognitive frequency...
             </div>
         </div>
     </div>
 
     <script>
-        // Time-based theming
-        function updateTimeBasedUI() {
+        // Time-based theming with qualia awareness
+        function applyTemporalContext() {
             const hour = new Date().getHours();
+            const body = document.body;
             const timeIcon = document.getElementById('timeIcon');
             const greeting = document.getElementById('greeting');
             
-            if (hour >= 5 && hour < 12) {
+            // Remove all theme classes
+            body.className = 'time-aware-body';
+            
+            if (hour >= 5 && hour < 9) {
+                // Morning: Fresh insights, new beginnings
+                body.classList.add('morning-theme');
                 timeIcon.textContent = '🌅';
-                greeting.textContent = 'Good Morning';
-                document.body.style.background = 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)';
-            } else if (hour >= 12 && hour < 18) {
+                greeting.textContent = 'Fresh Morning Insights';
+            } else if (hour >= 9 && hour < 12) {
+                // Late Morning: Focus, productivity
+                body.classList.add('day-theme');
+                timeIcon.textContent = '☀️';
+                greeting.textContent = 'Productive Focus Time';
+            } else if (hour >= 12 && hour < 17) {
+                // Afternoon: Exploration, connections
+                body.classList.add('day-theme');
                 timeIcon.textContent = '🏙️';
-                greeting.textContent = 'Good Afternoon';
-                document.body.style.background = 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)';
+                greeting.textContent = 'Exploration Phase';
+            } else if (hour >= 17 && hour < 21) {
+                // Evening: Reflection, synthesis
+                body.classList.add('evening-theme');
+                timeIcon.textContent = '🌇';
+                greeting.textContent = 'Evening Synthesis';
             } else {
+                // Night: Deep thinking, creativity
+                body.classList.add('night-theme');
                 timeIcon.textContent = '🌃';
-                greeting.textContent = 'Good Evening';
-                document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                greeting.textContent = 'Creative Night Mode';
             }
         }
         
-        // Qualia-sorted news data
-        const newsData = [
-            {
-                icon: '💡',
-                title: 'Pattern Recognition: Simple solutions often overlooked',
-                description: 'The most elegant ideas are usually hiding in plain sight, waiting for the right perspective to reveal them.',
-                source: 'Insight Engine',
-                time: '2h ago',
-                usefulness: 92
+        // Qualia-sorted news data with temporal relevance
+        const qualiaNewsEngine = {
+            getContextualNews: function() {
+                const hour = new Date().getHours();
+                let newsFocus = '';
+                
+                if (hour >= 5 && hour < 9) newsFocus = 'clarity';
+                else if (hour >= 9 && hour < 12) newsFocus = 'action';
+                else if (hour >= 12 && hour < 17) newsFocus = 'connection';
+                else if (hour >= 17 && hour < 21) newsFocus = 'synthesis';
+                else newsFocus = 'creativity';
+                
+                return this.newsDatabase.filter(item => 
+                    item.qualiaFocus.includes(newsFocus)
+                ).sort((a, b) => b.usefulness - a.usefulness);
             },
-            {
-                icon: '🔄',
-                title: 'Contradictions as Innovation Fuel',
-                description: 'Opposing ideas create the creative friction that sparks genuine breakthroughs and new paradigms.',
-                source: 'Paradox Core',
-                time: '4h ago', 
-                usefulness: 88
-            },
-            {
-                icon: '🎯',
-                title: 'Happiness Through Making',
-                description: 'The act of creation itself generates more joy than the finished product. Build to be happy.',
-                source: 'Joy Principle',
-                time: '1h ago',
-                usefulness: 95
-            },
-            {
-                icon: '🌊',
-                title: 'Flow State Accessibility',
-                description: 'Deep focus is not a rare gift but a trainable skill available to anyone with intentional practice.',
-                source: 'Focus Lab',
-                time: '6h ago',
-                usefulness: 85
-            }
-        ];
-        
-        // Display news
-        function displayNews() {
-            const grid = document.getElementById('newsGrid');
-            grid.innerHTML = '';
             
-            newsData.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'news-card';
-                card.innerHTML = `
-                    <div class="news-title">
-                        <span class="news-icon">${item.icon}</span>
-                        ${item.title}
-                    </div>
-                    <div class="news-desc">${item.description}</div>
-                    <div class="news-meta">
-                        <span>${item.source} • ${item.time}</span>
-                        <span class="qualia-badge">🎯 ${item.usefulness}%</span>
+            newsDatabase: [
+                {
+                    icon: '💡',
+                    title: 'The Clarity of Simple Solutions',
+                    description: 'Complex problems often have elegantly simple answers. The trick is asking the right questions from a place of calm awareness.',
+                    source: 'Wisdom Engine',
+                    time: 'Just now',
+                    usefulness: 96,
+                    qualiaFocus: ['clarity', 'synthesis']
+                },
+                {
+                    icon: '🔄',
+                    title: 'Contradictions as Creative Fuel',
+                    description: 'When opposing ideas collide, they create the friction that ignites genuine innovation. Embrace the tension.',
+                    source: 'Paradox Core',
+                    time: '2h ago',
+                    usefulness: 92,
+                    qualiaFocus: ['creativity', 'connection']
+                },
+                {
+                    icon: '🎯',
+                    title: 'Happiness Through Active Creation',
+                    description: 'The act of making something—anything—generates more lasting joy than passive consumption. Build to be happy.',
+                    source: 'Joy Principle',
+                    time: '1h ago', 
+                    usefulness: 98,
+                    qualiaFocus: ['action', 'clarity']
+                },
+                {
+                    icon: '🌊',
+                    title: 'Accessing Flow State Naturally',
+                    description: 'Deep focus emerges when challenge meets skill in a distraction-free environment. Design your space for flow.',
+                    source: 'Focus Lab',
+                    time: '4h ago',
+                    usefulness: 89,
+                    qualiaFocus: ['action', 'clarity']
+                },
+                {
+                    icon: '🔗',
+                    title: 'Connecting Unrelated Concepts',
+                    description: 'Breakthrough insights often come from linking ideas across different domains. Cross-pollinate your thinking.',
+                    source: 'Connection Matrix',
+                    time: '3h ago',
+                    usefulness: 91,
+                    qualiaFocus: ['connection', 'creativity']
+                },
+                {
+                    icon: '🧘',
+                    title: 'The Power of Mental Synthesis',
+                    description: 'True understanding comes not from collecting information, but from synthesizing it into new mental models.',
+                    source: 'Synthesis Engine',
+                    time: '5h ago',
+                    usefulness: 94,
+                    qualiaFocus: ['synthesis', 'clarity']
+                }
+            ]
+        };
+        
+        // Display qualia-sorted news
+        function renderQualiaNews() {
+            const grid = document.getElementById('newsGrid');
+            const contextualNews = qualiaNewsEngine.getContextualNews();
+            
+            grid.innerHTML = contextualNews.map(item => {
+                const usefulnessClass = item.usefulness >= 95 ? 'high-usefulness' : 
+                                      item.usefulness >= 85 ? 'medium-usefulness' : '';
+                
+                return `
+                    <div class="news-card" onclick="this.style.transform='scale(0.98)'">
+                        <div class="news-title">
+                            <span class="news-icon">${item.icon}</span>
+                            ${item.title}
+                        </div>
+                        <div class="news-desc">${item.description}</div>
+                        <div class="news-meta">
+                            <span>${item.source} • ${item.time}</span>
+                            <span class="usefulness-badge ${usefulnessClass}">
+                                🎯 ${item.usefulness}% useful
+                            </span>
+                        </div>
                     </div>
                 `;
-                grid.appendChild(card);
-            });
+            }).join('');
         }
         
-        // Initialize
-        updateTimeBasedUI();
-        setTimeout(displayNews, 1000); // Simulate loading
+        // Initialize with beautiful delays
+        function initializeApp() {
+            applyTemporalContext();
+            
+            // Simulate loading for better UX
+            setTimeout(() => {
+                renderQualiaNews();
+                
+                // Add celebratory effect
+                const header = document.querySelector('.header');
+                header.style.animation = 'float 2s ease-in-out';
+                
+            }, 1500);
+        }
         
-        // Update time every minute
-        setInterval(updateTimeBasedUI, 60000);
+        // Start the magic
+        initializeApp();
+        
+        // Update context every minute
+        setInterval(applyTemporalContext, 60000);
+        
+        // Re-sort news every 5 minutes
+        setInterval(renderQualiaNews, 300000);
     </script>
 </body>
 </html>
