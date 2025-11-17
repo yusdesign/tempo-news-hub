@@ -12,7 +12,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        Toast.makeText(this, "🚀 APP STARTED!", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "🚀 GUARDIAN CHARGE!", Toast.LENGTH_LONG).show();
         
         try {
             WebView webView = new WebView(this);
@@ -21,13 +21,18 @@ public class MainActivity extends AppCompatActivity {
             
             webView.setWebViewClient(new WebViewClient() {
                 @Override
-                public void onPageFinished(WebView view, String url) {
-                    Toast.makeText(MainActivity.this, "📰 HTML LOADED!", Toast.LENGTH_SHORT).show();
+                public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                    view.loadUrl(url);
+                    return true;
                 }
                 
                 @Override
-                public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                    Toast.makeText(MainActivity.this, "❌ WebView Error: " + description, Toast.LENGTH_LONG).show();
+                public void onPageFinished(WebView view, String url) {
+                    if (url.startsWith("file://")) {
+                        Toast.makeText(MainActivity.this, "📰 Guardian Edition Loaded!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(MainActivity.this, "🌐 Loading: " + url, Toast.LENGTH_SHORT).show();
+                    }
                 }
             });
             
