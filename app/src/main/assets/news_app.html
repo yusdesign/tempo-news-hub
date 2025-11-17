@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Tempo - Working News</title>
+    <title>The Tempo - Guardian Edition</title>
     <style>
         :root {
             --guardian-blue: #052962;
@@ -22,61 +22,49 @@
             min-height: 100vh;
         }
         
-        .masthead {
-            background: var(--guardian-blue);
+        .greeting-banner {
+            background: linear-gradient(135deg, var(--guardian-blue), #1a3d7c);
             color: white;
-            padding: 20px 0;
+            padding: 25px 20px;
+            text-align: center;
             border-bottom: 4px solid var(--guardian-red);
         }
         
-        .masthead-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-            text-align: center;
+        .greeting-text {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 8px;
         }
         
-        .logo {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            font-size: 2.5em;
-            font-weight: 800;
-            letter-spacing: -1px;
+        .date-text {
+            font-size: 1.1em;
+            opacity: 0.9;
         }
-        
-        .logo span { color: var(--guardian-red); }
         
         .container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 30px 20px;
-        }
-        
-        .context-banner {
-            background: var(--guardian-blue);
-            color: white;
             padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            text-align: center;
         }
         
         .news-grid {
             display: grid;
-            gap: 25px;
+            gap: 20px;
+            margin-top: 20px;
         }
         
         .article-card {
             background: white;
-            padding: 25px;
+            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             border-left: 4px solid var(--guardian-blue);
         }
         
         .article-title {
-            font-size: 1.4em;
+            font-size: 1.3em;
             font-weight: 700;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             color: var(--guardian-dark);
         }
         
@@ -96,12 +84,6 @@
             border-top: 1px solid #eee;
         }
         
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-        
         .source-badge {
             background: var(--guardian-blue);
             color: white;
@@ -109,6 +91,12 @@
             border-radius: 12px;
             font-size: 0.8em;
             font-weight: 600;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
         }
         
         .refresh-btn {
@@ -121,190 +109,63 @@
             cursor: pointer;
             margin: 10px 0;
         }
-        
-        .demo-notice {
-            background: #e8f4fd;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            text-align: center;
-            border-left: 4px solid var(--guardian-blue);
-        }
     </style>
 </head>
 <body>
-    <header class="masthead">
-        <div class="masthead-container">
-            <div class="logo">The <span>Tempo</span></div>
-            <div>Working News Reader</div>
-        </div>
+    <!-- GREETING BANNER -->
+    <header class="greeting-banner">
+        <div class="greeting-text" id="greeting">Welcome</div>
+        <div class="date-text" id="dateDisplay">Loading...</div>
     </header>
 
     <div class="container">
-        <section class="context-banner">
-            <h1>📰 News That Actually Works</h1>
-            <p>No CORS issues • No broken feeds • Real content</p>
-            <button class="refresh-btn" onclick="newsEngine.loadNews()">🔄 Refresh</button>
-        </section>
-
-        <div class="demo-notice">
-            <strong>🌐 Smart Loading</strong> - If RSS feeds fail, shows curated real news<br>
-            Always delivers readable content
-        </div>
-
         <section class="news-grid" id="newsGrid">
             <div class="loading">
                 <div style="font-size: 2em; margin-bottom: 15px;">⚡</div>
-                <h3>Initializing news engine...</h3>
-                <p>Preparing reliable content delivery</p>
+                <h3>Initializing Guardian News Hub...</h3>
+                <p>Loading your personalized news</p>
             </div>
         </section>
     </div>
 
     <script>
-        // SMART NEWS ENGINE - Always works
-        const newsEngine = {
-            async tryRSSFeeds() {
-                // Try to fetch from reliable RSS proxies
-                const feeds = [
-                    {
-                        name: "BBC World",
-                        url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/news/world/rss.xml"
-                    },
-                    {
-                        name: "Reuters",
-                        url: "https://api.rss2json.com/v1/api.json?rss_url=https://feeds.reuters.com/reuters/topNews" 
-                    }
-                ];
-                
-                const allArticles = [];
-                
-                for (const feed of feeds) {
-                    try {
-                        const response = await fetch(feed.url);
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.items) {
-                                data.items.slice(0, 3).forEach(item => {
-                                    allArticles.push({
-                                        title: item.title,
-                                        description: item.description ? 
-                                            item.description.replace(/<[^>]*>/g, '').substring(0, 150) + '...' : 
-                                            'Read the full story',
-                                        date: new Date(item.pubDate).toLocaleDateString(),
-                                        source: feed.name,
-                                        link: item.link
-                                    });
-                                });
-                            }
-                        }
-                    } catch (error) {
-                        console.log(`RSS feed ${feed.name} failed:`, error);
-                    }
+        // Update date display
+        document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        // Simple news loader for now - Guardian API will be added in next step
+        setTimeout(() => {
+            const articles = [
+                {
+                    title: "Guardian News Hub Ready",
+                    description: "Your personalized news experience is loading. Next step: Guardian Open Platform integration.",
+                    date: new Date().toLocaleDateString(),
+                    source: "Tempo System"
+                },
+                {
+                    title: "Daytime Greetings Active",
+                    description: "The greeting system is now working! Time-aware welcome messages are displayed.",
+                    date: new Date().toLocaleDateString(),
+                    source: "Tempo UI"
                 }
-                
-                return allArticles;
-            },
+            ];
             
-            getCuratedNews() {
-                // Curated real news summaries when RSS fails
-                const currentDate = new Date().toLocaleDateString();
-                return [
-                    {
-                        title: "Global Climate Efforts Intensify Ahead of UN Summit",
-                        description: "Countries ramp up carbon reduction commitments as new climate data shows accelerating warming patterns. International cooperation focuses on renewable energy transition.",
-                        date: currentDate,
-                        source: "Environment Watch",
-                        link: "https://www.bbc.com/news/science-environment"
-                    },
-                    {
-                        title: "Tech Giants Announce AI Safety Partnership",
-                        description: "Major technology companies form alliance to establish safety standards for artificial intelligence development. Focus on ethical guidelines and transparency measures.",
-                        date: currentDate, 
-                        source: "Technology Review",
-                        link: "https://www.reuters.com/technology"
-                    },
-                    {
-                        title: "Central Banks Coordinate on Economic Stability",
-                        description: "Global financial leaders meet to align monetary policies amid fluctuating markets. Emphasis on controlling inflation while supporting growth.",
-                        date: currentDate,
-                        source: "Financial Times",
-                        link: "https://www.ft.com/markets"
-                    },
-                    {
-                        title: "Breakthrough in Medical Research Shows Promise",
-                        description: "New study reveals potential treatment for neurodegenerative diseases. Clinical trials show significant improvement in patient outcomes.",
-                        date: currentDate,
-                        source: "Health Journal", 
-                        link: "https://www.thelancet.com"
-                    },
-                    {
-                        title: "Space Exploration Enters New Phase with Private Missions",
-                        description: "Commercial space companies launch ambitious orbital and lunar projects. Partnerships with government agencies accelerate space access.",
-                        date: currentDate,
-                        source: "Space News",
-                        link: "https://www.space.com"
-                    },
-                    {
-                        title: "Renewable Energy Adoption Hits Record Levels",
-                        description: "Solar and wind power installations surge globally as costs continue to decline. Energy storage technology improvements enable greater grid integration.",
-                        date: currentDate,
-                        source: "Energy Report",
-                        link: "https://www.iea.org/renewables"
-                    }
-                ];
-            },
-            
-            async loadNews() {
-                const grid = document.getElementById('newsGrid');
-                grid.innerHTML = '<div class="loading"><div style="font-size: 2em; margin-bottom: 15px;">📡</div><h3>Fetching news...</h3></div>';
-                
-                try {
-                    // Try RSS feeds first
-                    let articles = await this.tryRSSFeeds();
-                    
-                    // If RSS fails, use curated news
-                    if (articles.length === 0) {
-                        articles = this.getCuratedNews();
-                    }
-                    
-                    this.renderArticles(articles);
-                    
-                } catch (error) {
-                    // Fallback to curated news
-                    const articles = this.getCuratedNews();
-                    this.renderArticles(articles);
-                }
-            },
-            
-            renderArticles(articles) {
-                const grid = document.getElementById('newsGrid');
-                
-                grid.innerHTML = articles.map(article => `
-                    <article class="article-card">
-                        <div class="article-meta">
-                            <span class="source-badge">${article.source}</span>
-                            <span>${article.date}</span>
-                        </div>
-                        <h2 class="article-title">${article.title}</h2>
-                        <p class="article-summary">${article.description}</p>
-                        <div class="article-meta">
-                            <span>📰 News Feed</span>
-                            <span style="color: #27ae60;">✅ Loaded Successfully</span>
-                        </div>
-                    </article>
-                `).join('');
-            },
-            
-            initialize() {
-                this.loadNews();
-                // Refresh every 15 minutes
-                setInterval(() => this.loadNews(), 900000);
-            }
-        };
-        
-        // Start the reliable news engine!
-        newsEngine.initialize();
+            const grid = document.getElementById('newsGrid');
+            grid.innerHTML = articles.map(article => `
+                <article class="article-card">
+                    <div class="article-meta">
+                        <span class="source-badge">${article.source}</span>
+                        <span>${article.date}</span>
+                    </div>
+                    <h2 class="article-title">${article.title}</h2>
+                    <p class="article-summary">${article.description}</p>
+                </article>
+            `).join('');
+        }, 1500);
     </script>
 </body>
 </html>
