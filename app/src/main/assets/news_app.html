@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Tempo - Guardian Smart Reader</title>
+    <title>The Tempo - Live News</title>
     <style>
         :root {
             --guardian-blue: #052962;
@@ -71,12 +71,6 @@
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             border-left: 4px solid var(--guardian-blue);
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-        
-        .article-card:hover {
-            transform: translateY(-2px);
         }
         
         .article-title {
@@ -102,41 +96,38 @@
             border-top: 1px solid #eee;
         }
         
-        .article-content {
-            display: none;
-            margin-top: 15px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 5px;
-            border-left: 3px solid var(--guardian-red);
-        }
-        
-        .article-expanded .article-content {
-            display: block;
-        }
-        
-        .read-more {
-            color: var(--guardian-blue);
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-            display: inline-block;
-        }
-        
         .loading {
             text-align: center;
             padding: 40px;
             color: #666;
         }
         
-        .api-note {
-            background: #e8f4fd;
-            padding: 15px;
+        .error {
+            background: #ffeaa7;
+            padding: 20px;
             border-radius: 8px;
-            margin: 20px 0;
             text-align: center;
-            font-size: 0.9em;
-            border-left: 4px solid var(--guardian-blue);
+            margin: 20px 0;
+        }
+        
+        .source-badge {
+            background: var(--guardian-blue);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .refresh-btn {
+            background: var(--guardian-red);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -144,167 +135,158 @@
     <header class="masthead">
         <div class="masthead-container">
             <div class="logo">The <span>Tempo</span></div>
-            <div>Guardian Smart Reader</div>
+            <div>Live RSS News Feed</div>
         </div>
     </header>
 
     <div class="container">
         <section class="context-banner">
-            <h1>📰 Guardian Article Summaries</h1>
-            <p>Click any article to read expanded content</p>
+            <h1>📰 Live News Feed</h1>
+            <p>Real headlines from multiple sources • Updated continuously</p>
+            <button class="refresh-btn" onclick="newsFetcher.fetchAllNews()">🔄 Refresh News</button>
         </section>
-
-        <div class="api-note">
-            🔒 <strong>Smart Reading Mode</strong> - Articles load within the app<br>
-            No external browser needed • Full content available
-        </div>
 
         <section class="news-grid" id="newsGrid">
             <div class="loading">
                 <div style="font-size: 2em; margin-bottom: 15px;">⚡</div>
-                <h3>Loading Guardian Intelligence...</h3>
-                <p>Preparing article summaries</p>
+                <h3>Loading live news feeds...</h3>
+                <p>Fetching real-time headlines from multiple sources</p>
             </div>
         </section>
     </div>
 
     <script>
-        // Smart Guardian Reader - No external links needed
-        const guardianReader = {
-            articles: [
+        // REAL RSS NEWS FETCHER
+        const newsFetcher = {
+            sources: [
                 {
-                    id: 1,
-                    title: "Global Climate Summit Reaches Historic Agreement",
-                    summary: "World leaders unite on ambitious carbon reduction targets after marathon negotiations in Paris.",
-                    fullContent: `After two weeks of intense negotiations, world leaders have reached a groundbreaking agreement at the Global Climate Summit in Paris. The deal commits 195 countries to reduce carbon emissions by 50% by 2030 and achieve net-zero by 2050.
-
-Key provisions include:
-• $100 billion annual climate fund for developing nations
-• Mandatory emissions reporting for all signatories  
-• Technology sharing agreement for renewable energy
-• Protection for indigenous lands and biodiversity
-
-"This represents the most significant environmental agreement in history," said summit chair Dr. Elena Martinez. "For the first time, we have binding commitments from all major economies."`,
-                    section: "Environment",
-                    date: "Today",
-                    readingTime: "3 min read"
+                    name: "BBC News",
+                    url: "https://feeds.bbci.co.uk/news/world/rss.xml",
+                    color: "#BB1919"
                 },
                 {
-                    id: 2, 
-                    title: "Breakthrough in Quantum Computing Announced",
-                    summary: "Scientists achieve quantum supremacy with new processor that solves problems impossible for classical computers.",
-                    fullContent: `Researchers at the Quantum Innovation Institute have announced a major breakthrough in quantum computing, demonstrating a processor that can solve complex optimization problems 100 million times faster than the world's most powerful supercomputer.
-
-The new quantum chip features:
-• 256 qubits with unprecedented stability
-• Error correction that maintains coherence for hours
-• Applications in drug discovery and climate modeling
-• Potential to revolutionize cryptography
-
-"This isn't just an incremental improvement," said lead researcher Dr. Kenji Tanaka. "We're entering entirely new computational territory that was previously theoretical."`,
-                    section: "Technology",
-                    date: "Today", 
-                    readingTime: "4 min read"
+                    name: "Reuters", 
+                    url: "https://feeds.reuters.com/reuters/topNews",
+                    color: "#FF8000"
                 },
                 {
-                    id: 3,
-                    title: "Major Healthcare Reform Bill Passes Senate",
-                    summary: "Landmark legislation expands healthcare access to millions with bipartisan support after years of negotiation.",
-                    fullContent: `In a historic vote, the Senate has passed the Healthcare Access and Affordability Act with strong bipartisan support. The legislation represents the most significant expansion of healthcare coverage since the Affordable Care Act.
-
-The bill includes:
-• Coverage for 15 million previously uninsured Americans
-• Caps on prescription drug costs for seniors
-• Mental health parity requirements
-• Telemedicine expansion in rural areas
-
-"This bill proves that healthcare shouldn't be a partisan issue," said Senator Maria Rodriguez, one of the bill's architects. "We found common ground where it matters most - people's wellbeing."`,
-                    section: "US News",
-                    date: "Today",
-                    readingTime: "3 min read"
-                },
-                {
-                    id: 4,
-                    title: "Space Telescope Reveals New Galactic Discoveries", 
-                    summary: "Latest images from deep space observatory challenge existing models of galaxy formation and dark matter.",
-                    fullContent: `The Orion Space Telescope has transmitted images that are forcing astronomers to reconsider fundamental theories of galaxy formation. The unprecedented clarity reveals structures and patterns not predicted by current cosmological models.
-
-Key discoveries include:
-• Galaxy clusters forming much earlier than expected
-• Unexpected distribution of dark matter
-• Evidence of primordial magnetic fields
-• Hundreds of previously unknown exoplanets
-
-"Every time we build a better telescope, the universe surprises us," said Dr. Sarah Chen, lead astronomer on the project. "We're seeing the early universe in detail we never thought possible."`,
-                    section: "Science",
-                    date: "Today",
-                    readingTime: "4 min read"
-                },
-                {
-                    id: 5,
-                    title: "Economic Growth Exceeds Forecasts",
-                    summary: "Strong consumer spending and export growth drive better-than-expected economic performance across major indicators.",
-                    fullContent: `The latest economic reports show growth exceeding all forecasts, with GDP expanding at 4.2% annually and unemployment falling to 3.4% - the lowest rate in over 50 years.
-
-Positive indicators include:
-• Consumer confidence at 15-year high
-• Manufacturing expansion for 8th consecutive month
-• Export growth driven by technology and green energy
-• Wage growth outpacing inflation
-
-"This isn't a temporary boom," said Treasury Secretary Rebecca Wong. "We're seeing structural improvements that create sustainable, inclusive economic growth. The policies of investment in infrastructure and education are paying dividends."`,
-                    section: "Business",
-                    date: "Today",
-                    readingTime: "3 min read"
+                    name: "The Guardian",
+                    url: "https://www.theguardian.com/international/rss",
+                    color: "#052962"
                 }
             ],
             
-            renderArticles() {
+            async fetchRSSFeed(source) {
+                try {
+                    // Use CORS proxy to avoid blocking
+                    const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                    const response = await fetch(proxyUrl + encodeURIComponent(source.url));
+                    const text = await response.text();
+                    
+                    // Parse RSS XML
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(text, "text/xml");
+                    const items = xmlDoc.getElementsByTagName("item");
+                    
+                    const articles = [];
+                    for (let i = 0; i < Math.min(5, items.length); i++) {
+                        const item = items[i];
+                        const title = item.getElementsByTagName("title")[0]?.textContent || "No title";
+                        const link = item.getElementsByTagName("link")[0]?.textContent || "#";
+                        const description = item.getElementsByTagName("description")[0]?.textContent || "No description available";
+                        const pubDate = item.getElementsByTagName("pubDate")[0]?.textContent || new Date().toISOString();
+                        
+                        // Clean up description (remove HTML tags)
+                        const cleanDescription = description.replace(/<[^>]*>/g, '').substring(0, 200) + '...';
+                        
+                        articles.push({
+                            title: title,
+                            description: cleanDescription,
+                            link: link,
+                            date: new Date(pubDate).toLocaleDateString(),
+                            source: source.name,
+                            color: source.color
+                        });
+                    }
+                    
+                    return articles;
+                } catch (error) {
+                    console.error(`Error fetching ${source.name}:`, error);
+                    return [];
+                }
+            },
+            
+            async fetchAllNews() {
+                const grid = document.getElementById('newsGrid');
+                grid.innerHTML = '<div class="loading"><div style="font-size: 2em; margin-bottom: 15px;">⚡</div><h3>Fetching live news...</h3></div>';
+                
+                try {
+                    const allArticles = [];
+                    
+                    // Fetch from all sources in parallel
+                    const promises = this.sources.map(source => this.fetchRSSFeed(source));
+                    const results = await Promise.allSettled(promises);
+                    
+                    results.forEach((result, index) => {
+                        if (result.status === 'fulfilled') {
+                            allArticles.push(...result.value);
+                        }
+                    });
+                    
+                    // Sort by date (newest first) and take top 15
+                    const sortedArticles = allArticles
+                        .sort((a, b) => new Date(b.date) - new Date(a.date))
+                        .slice(0, 15);
+                    
+                    this.renderArticles(sortedArticles);
+                    
+                } catch (error) {
+                    grid.innerHTML = `
+                        <div class="error">
+                            <h3>🌐 Network Error</h3>
+                            <p>Unable to fetch live news. Please check your internet connection and try again.</p>
+                            <button class="refresh-btn" onclick="newsFetcher.fetchAllNews()">🔄 Retry</button>
+                        </div>
+                    `;
+                }
+            },
+            
+            renderArticles(articles) {
                 const grid = document.getElementById('newsGrid');
                 
-                grid.innerHTML = this.articles.map(article => `
-                    <article class="article-card" onclick="guardianReader.toggleArticle(${article.id})">
+                if (articles.length === 0) {
+                    grid.innerHTML = '<div class="error">No articles found. Try refreshing.</div>';
+                    return;
+                }
+                
+                grid.innerHTML = articles.map(article => `
+                    <article class="article-card">
                         <div class="article-meta">
-                            <strong>${article.section}</strong>
-                            <span>${article.date} • ${article.readingTime}</span>
+                            <span class="source-badge" style="background: ${article.color}">${article.source}</span>
+                            <span>${article.date}</span>
                         </div>
                         <h2 class="article-title">${article.title}</h2>
-                        <p class="article-summary">${article.summary}</p>
-                        
-                        <div class="article-content" id="content-${article.id}">
-                            <p>${article.fullContent.replace(/\n/g, '<br>')}</p>
-                            <div style="margin-top: 15px; font-style: italic; color: #666;">
-                                📖 Full article content loaded • No external browser needed
-                            </div>
-                        </div>
-                        
-                        <div class="read-more" onclick="event.stopPropagation(); guardianReader.toggleArticle(${article.id})">
-                            📖 <span id="toggle-${article.id}">Read full article</span>
+                        <p class="article-summary">${article.description}</p>
+                        <div class="article-meta">
+                            <span>📰 Real News Feed</span>
+                            <a href="${article.link}" style="color: var(--guardian-blue); text-decoration: none;" 
+                               onclick="window.open('${article.link}', '_blank')">
+                                View Original →
+                            </a>
                         </div>
                     </article>
                 `).join('');
             },
             
-            toggleArticle(articleId) {
-                const article = document.querySelector(`[onclick="guardianReader.toggleArticle(${articleId})"]`);
-                const toggleText = document.getElementById(`toggle-${articleId}`);
-                
-                if (article.classList.contains('article-expanded')) {
-                    article.classList.remove('article-expanded');
-                    toggleText.textContent = 'Read full article';
-                } else {
-                    article.classList.add('article-expanded');
-                    toggleText.textContent = 'Show summary';
-                }
-            },
-            
             initialize() {
-                this.renderArticles();
+                this.fetchAllNews();
+                // Auto-refresh every 10 minutes
+                setInterval(() => this.fetchAllNews(), 600000);
             }
         };
         
-        // Start the smart reader!
-        guardianReader.initialize();
+        // Start the real news feed!
+        newsFetcher.initialize();
     </script>
 </body>
 </html>
