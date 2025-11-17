@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        Toast.makeText(this, "🚀 GUARDIAN CHARGE!", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "🚀 TEMPO NEWS HUB!", Toast.LENGTH_LONG).show();
         
         String greeting = getDaytimeGreeting();
         Toast.makeText(this, "🌅 " + greeting + "!", Toast.LENGTH_SHORT).show();
@@ -37,22 +37,24 @@ public class MainActivity extends AppCompatActivity {
             webView.getSettings().setJavaScriptEnabled(true);
             webView.getSettings().setDomStorageEnabled(true);
             
-            // Load real Guardian data
-            loadGuardianNews(webView, greeting);
+            // Load news immediately
+            loadNewsData(webView, greeting);
             
             webView.setWebViewClient(new WebViewClient() {
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                    view.loadUrl(url);
-                    return true;
+                    // Open external links in WebView
+                    if (url.startsWith("http")) {
+                        view.loadUrl(url);
+                        return true;
+                    }
+                    return false;
                 }
 
                 @Override
                 public void onPageFinished(WebView view, String url) {
                     if (url.startsWith("file://")) {
-                        Toast.makeText(MainActivity.this, "📰 Guardian Edition Loaded!", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(MainActivity.this, "🌐 Loading: " + url, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "📰 News Loaded Successfully!", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
@@ -61,15 +63,15 @@ public class MainActivity extends AppCompatActivity {
             setContentView(webView);
             
         } catch (Exception e) {
-            Toast.makeText(this, "❌ Crash: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "❌ Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
     
-    private void loadGuardianNews(WebView webView, String greeting) {
+    private void loadNewsData(WebView webView, String greeting) {
         new Thread(() -> {
             try {
                 NewsService newsService = new NewsService();
-                List<NewsArticle> articles = newsService.fetchGuardianNews();
+                List<NewsArticle> articles = newsService.fetchNews();
                 
                 // Convert to JSON for JavaScript
                 StringBuilder articlesJson = new StringBuilder("[");
@@ -95,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     String js = "javascript:{" +
                                 "document.getElementById('greeting').innerText = '" + greeting + "';" +
-                                "window.guardianArticles = " + finalJson + ";" +
+                                "window.newsArticles = " + finalJson + ";" +
                                 "if(window.renderArticles) window.renderArticles(" + finalJson + ");" +
                                 "}";
                     webView.evaluateJavascript(js, null);
@@ -103,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
                 
             } catch (Exception e) {
                 e.printStackTrace();
+                // Even if Java fails, HTML has its own fallback
             }
         }).start();
     }
@@ -113,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
                   .replace("\"", "\\\"")
                   .replace("\n", "\\n")
                   .replace("\r", "\\r")
-                  .replace("\t", "\\t");
+                  .replace("\t", "\\t")
+                  .replace("'", "\\'");
     }
 }
