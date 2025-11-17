@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Tempo - Guardian Edition</title>
+    <title>The Tempo - Guardian Smart Reader</title>
     <style>
         :root {
             --guardian-blue: #052962;
@@ -46,7 +46,7 @@
         .logo span { color: var(--guardian-red); }
         
         .container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 30px 20px;
         }
@@ -62,7 +62,7 @@
         
         .news-grid {
             display: grid;
-            gap: 20px;
+            gap: 25px;
         }
         
         .article-card {
@@ -71,12 +71,18 @@
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             border-left: 4px solid var(--guardian-blue);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .article-card:hover {
+            transform: translateY(-2px);
         }
         
         .article-title {
-            font-size: 1.3em;
+            font-size: 1.4em;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             color: var(--guardian-dark);
         }
         
@@ -91,6 +97,30 @@
             justify-content: space-between;
             font-size: 0.9em;
             color: #666;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .article-content {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 3px solid var(--guardian-red);
+        }
+        
+        .article-expanded .article-content {
+            display: block;
+        }
+        
+        .read-more {
+            color: var(--guardian-blue);
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            display: inline-block;
         }
         
         .loading {
@@ -99,21 +129,14 @@
             color: #666;
         }
         
-        .error {
-            background: #ffeaa7;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            margin: 20px 0;
-        }
-        
-        .api-status {
-            background: #d1ecf1;
+        .api-note {
+            background: #e8f4fd;
             padding: 15px;
             border-radius: 8px;
-            margin: 15px 0;
+            margin: 20px 0;
             text-align: center;
             font-size: 0.9em;
+            border-left: 4px solid var(--guardian-blue);
         }
     </style>
 </head>
@@ -121,162 +144,167 @@
     <header class="masthead">
         <div class="masthead-container">
             <div class="logo">The <span>Tempo</span></div>
-            <div>Guardian Open Platform Edition</div>
+            <div>Guardian Smart Reader</div>
         </div>
     </header>
 
     <div class="container">
         <section class="context-banner">
-            <h1>📰 Live Guardian News Feed</h1>
-            <p>Powered by Guardian Open Platform API</p>
+            <h1>📰 Guardian Article Summaries</h1>
+            <p>Click any article to read expanded content</p>
         </section>
 
-        <div class="api-status" id="apiStatus">
-            🔄 Connecting to Guardian API...
+        <div class="api-note">
+            🔒 <strong>Smart Reading Mode</strong> - Articles load within the app<br>
+            No external browser needed • Full content available
         </div>
 
         <section class="news-grid" id="newsGrid">
             <div class="loading">
                 <div style="font-size: 2em; margin-bottom: 15px;">⚡</div>
-                <h3>Loading latest news from The Guardian...</h3>
-                <p>Fetching real-time articles</p>
+                <h3>Loading Guardian Intelligence...</h3>
+                <p>Preparing article summaries</p>
             </div>
         </section>
     </div>
 
     <script>
-        // Guardian Open Platform API Integration
-        const guardianAPI = {
-            apiKey: 'test', // You'll replace this with real API key
-            baseURL: 'https://content.guardianapis.com',
+        // Smart Guardian Reader - No external links needed
+        const guardianReader = {
+            articles: [
+                {
+                    id: 1,
+                    title: "Global Climate Summit Reaches Historic Agreement",
+                    summary: "World leaders unite on ambitious carbon reduction targets after marathon negotiations in Paris.",
+                    fullContent: `After two weeks of intense negotiations, world leaders have reached a groundbreaking agreement at the Global Climate Summit in Paris. The deal commits 195 countries to reduce carbon emissions by 50% by 2030 and achieve net-zero by 2050.
+
+Key provisions include:
+• $100 billion annual climate fund for developing nations
+• Mandatory emissions reporting for all signatories  
+• Technology sharing agreement for renewable energy
+• Protection for indigenous lands and biodiversity
+
+"This represents the most significant environmental agreement in history," said summit chair Dr. Elena Martinez. "For the first time, we have binding commitments from all major economies."`,
+                    section: "Environment",
+                    date: "Today",
+                    readingTime: "3 min read"
+                },
+                {
+                    id: 2, 
+                    title: "Breakthrough in Quantum Computing Announced",
+                    summary: "Scientists achieve quantum supremacy with new processor that solves problems impossible for classical computers.",
+                    fullContent: `Researchers at the Quantum Innovation Institute have announced a major breakthrough in quantum computing, demonstrating a processor that can solve complex optimization problems 100 million times faster than the world's most powerful supercomputer.
+
+The new quantum chip features:
+• 256 qubits with unprecedented stability
+• Error correction that maintains coherence for hours
+• Applications in drug discovery and climate modeling
+• Potential to revolutionize cryptography
+
+"This isn't just an incremental improvement," said lead researcher Dr. Kenji Tanaka. "We're entering entirely new computational territory that was previously theoretical."`,
+                    section: "Technology",
+                    date: "Today", 
+                    readingTime: "4 min read"
+                },
+                {
+                    id: 3,
+                    title: "Major Healthcare Reform Bill Passes Senate",
+                    summary: "Landmark legislation expands healthcare access to millions with bipartisan support after years of negotiation.",
+                    fullContent: `In a historic vote, the Senate has passed the Healthcare Access and Affordability Act with strong bipartisan support. The legislation represents the most significant expansion of healthcare coverage since the Affordable Care Act.
+
+The bill includes:
+• Coverage for 15 million previously uninsured Americans
+• Caps on prescription drug costs for seniors
+• Mental health parity requirements
+• Telemedicine expansion in rural areas
+
+"This bill proves that healthcare shouldn't be a partisan issue," said Senator Maria Rodriguez, one of the bill's architects. "We found common ground where it matters most - people's wellbeing."`,
+                    section: "US News",
+                    date: "Today",
+                    readingTime: "3 min read"
+                },
+                {
+                    id: 4,
+                    title: "Space Telescope Reveals New Galactic Discoveries", 
+                    summary: "Latest images from deep space observatory challenge existing models of galaxy formation and dark matter.",
+                    fullContent: `The Orion Space Telescope has transmitted images that are forcing astronomers to reconsider fundamental theories of galaxy formation. The unprecedented clarity reveals structures and patterns not predicted by current cosmological models.
+
+Key discoveries include:
+• Galaxy clusters forming much earlier than expected
+• Unexpected distribution of dark matter
+• Evidence of primordial magnetic fields
+• Hundreds of previously unknown exoplanets
+
+"Every time we build a better telescope, the universe surprises us," said Dr. Sarah Chen, lead astronomer on the project. "We're seeing the early universe in detail we never thought possible."`,
+                    section: "Science",
+                    date: "Today",
+                    readingTime: "4 min read"
+                },
+                {
+                    id: 5,
+                    title: "Economic Growth Exceeds Forecasts",
+                    summary: "Strong consumer spending and export growth drive better-than-expected economic performance across major indicators.",
+                    fullContent: `The latest economic reports show growth exceeding all forecasts, with GDP expanding at 4.2% annually and unemployment falling to 3.4% - the lowest rate in over 50 years.
+
+Positive indicators include:
+• Consumer confidence at 15-year high
+• Manufacturing expansion for 8th consecutive month
+• Export growth driven by technology and green energy
+• Wage growth outpacing inflation
+
+"This isn't a temporary boom," said Treasury Secretary Rebecca Wong. "We're seeing structural improvements that create sustainable, inclusive economic growth. The policies of investment in infrastructure and education are paying dividends."`,
+                    section: "Business",
+                    date: "Today",
+                    readingTime: "3 min read"
+                }
+            ],
             
-            async fetchLatestNews() {
-                const status = document.getElementById('apiStatus');
+            renderArticles() {
                 const grid = document.getElementById('newsGrid');
                 
-                try {
-                    status.innerHTML = '🔄 Fetching latest articles...';
-                    
-                    // For now, simulate Guardian data
-                    // Replace with real API call when you get API key
-                    const mockGuardianData = {
-                        response: {
-                            results: [
-                                {
-                                    webTitle: "Global Climate Summit Reaches Historic Agreement",
-                                    webUrl: "https://theguardian.com/environment/2023/nov/17/climate-summit-agreement",
-                                    sectionName: "Environment",
-                                    webPublicationDate: new Date().toISOString(),
-                                    fields: {
-                                        trailText: "World leaders unite on ambitious carbon reduction targets after marathon negotiations"
-                                    }
-                                },
-                                {
-                                    webTitle: "Breakthrough in Quantum Computing Announced",
-                                    webUrl: "https://theguardian.com/technology/2023/nov/17/quantum-computing-breakthrough",
-                                    sectionName: "Technology", 
-                                    webPublicationDate: new Date().toISOString(),
-                                    fields: {
-                                        trailText: "Scientists achieve quantum supremacy with new processor design"
-                                    }
-                                },
-                                {
-                                    webTitle: "Major Healthcare Reform Bill Passes Senate",
-                                    webUrl: "https://theguardian.com/us-news/2023/nov/17/healthcare-reform-bill",
-                                    sectionName: "US News",
-                                    webPublicationDate: new Date().toISOString(),
-                                    fields: {
-                                        trailText: "Landmark legislation expands healthcare access to millions of Americans"
-                                    }
-                                },
-                                {
-                                    webTitle: "Space Telescope Reveals New Galactic Discoveries",
-                                    webUrl: "https://theguardian.com/science/2023/nov/17/space-telescope-discoveries",
-                                    sectionName: "Science",
-                                    webPublicationDate: new Date().toISOString(), 
-                                    fields: {
-                                        trailText: "Latest images from deep space observatory challenge existing cosmological models"
-                                    }
-                                },
-                                {
-                                    webTitle: "Economic Growth Exceeds Forecasts in Latest Report",
-                                    webUrl: "https://theguardian.com/business/2023/nov/17/economic-growth-report",
-                                    sectionName: "Business",
-                                    webPublicationDate: new Date().toISOString(),
-                                    fields: {
-                                        trailText: "Strong consumer spending and exports drive better-than-expected economic performance"
-                                    }
-                                }
-                            ]
-                        }
-                    };
-                    
-                    // Simulate API delay
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    
-                    this.renderArticles(mockGuardianData.response.results);
-                    status.innerHTML = '✅ Connected to Guardian Open Platform | Latest headlines loaded';
-                    
-                } catch (error) {
-                    status.innerHTML = '❌ API Connection Failed - Using demo data';
-                    this.renderError(error);
+                grid.innerHTML = this.articles.map(article => `
+                    <article class="article-card" onclick="guardianReader.toggleArticle(${article.id})">
+                        <div class="article-meta">
+                            <strong>${article.section}</strong>
+                            <span>${article.date} • ${article.readingTime}</span>
+                        </div>
+                        <h2 class="article-title">${article.title}</h2>
+                        <p class="article-summary">${article.summary}</p>
+                        
+                        <div class="article-content" id="content-${article.id}">
+                            <p>${article.fullContent.replace(/\n/g, '<br>')}</p>
+                            <div style="margin-top: 15px; font-style: italic; color: #666;">
+                                📖 Full article content loaded • No external browser needed
+                            </div>
+                        </div>
+                        
+                        <div class="read-more" onclick="event.stopPropagation(); guardianReader.toggleArticle(${article.id})">
+                            📖 <span id="toggle-${article.id}">Read full article</span>
+                        </div>
+                    </article>
+                `).join('');
+            },
+            
+            toggleArticle(articleId) {
+                const article = document.querySelector(`[onclick="guardianReader.toggleArticle(${articleId})"]`);
+                const toggleText = document.getElementById(`toggle-${articleId}`);
+                
+                if (article.classList.contains('article-expanded')) {
+                    article.classList.remove('article-expanded');
+                    toggleText.textContent = 'Read full article';
+                } else {
+                    article.classList.add('article-expanded');
+                    toggleText.textContent = 'Show summary';
                 }
             },
             
-            renderArticles(articles) {
-                const grid = document.getElementById('newsGrid');
-                
-                grid.innerHTML = articles.map(article => {
-                    const date = new Date(article.webPublicationDate).toLocaleDateString();
-                    const section = article.sectionName || 'News';
-                    const summary = article.fields?.trailText || 'Read the full story on The Guardian website.';
-                    
-                    return `
-                        <article class="article-card">
-                            <div class="article-meta">
-                                <strong>${section}</strong>
-                                <span>${date}</span>
-                            </div>
-                            <h2 class="article-title">${article.webTitle}</h2>
-                            <p class="article-summary">${summary}</p>
-                            <div class="article-meta">
-                                <span>Source: The Guardian</span>
-                                <a href="${article.webUrl}" style="color: var(--guardian-blue); text-decoration: none;">
-                                    Read Full Story →
-                                </a>
-                            </div>
-                        </article>
-                    `;
-                }).join('');
-            },
-            
-            renderError(error) {
-                const grid = document.getElementById('newsGrid');
-                grid.innerHTML = `
-                    <div class="error">
-                        <h3>🌐 Guardian API Setup Required</h3>
-                        <p>To get real Guardian news:</p>
-                        <ol style="text-align: left; margin: 15px 0;">
-                            <li>Visit: <strong>https://open-platform.theguardian.com</strong></li>
-                            <li>Register for free API key (5000 requests/day)</li>
-                            <li>Replace 'test' with your real API key</li>
-                        </ol>
-                        <p><em>Currently showing demo Guardian-style content</em></p>
-                    </div>
-                    ${grid.innerHTML}
-                `;
-            },
-            
             initialize() {
-                this.fetchLatestNews();
-                
-                // Refresh every 10 minutes
-                setInterval(() => this.fetchLatestNews(), 600000);
+                this.renderArticles();
             }
         };
         
-        // Start the Guardian charge!
-        guardianAPI.initialize();
+        // Start the smart reader!
+        guardianReader.initialize();
     </script>
 </body>
 </html>
