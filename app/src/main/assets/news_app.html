@@ -3,30 +3,30 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tempo News Hub</title>
+    <title>Tempo News Hub - Guardian Edition</title>
     <style>
         :root {
-            --primary-blue: #052962;
-            --dark-text: #121212;
-            --light-bg: #f6f6f6;
-            --accent-red: #c70000;
+            --guardian-blue: #052962;
+            --guardian-dark: #121212;
+            --guardian-light: #f6f6f6;
+            --guardian-red: #c70000;
         }
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Georgia', serif;
-            background: var(--light-bg);
-            color: var(--dark-text);
+            background: var(--guardian-light);
+            color: var(--guardian-dark);
             line-height: 1.6;
         }
         
         .greeting-banner {
-            background: linear-gradient(135deg, var(--primary-blue), #1a3d7c);
+            background: linear-gradient(135deg, var(--guardian-blue), #1a3d7c);
             color: white;
             padding: 25px 20px;
             text-align: center;
-            border-bottom: 4px solid var(--accent-red);
+            border-bottom: 4px solid var(--guardian-red);
         }
         
         .greeting-text {
@@ -38,6 +38,15 @@
         .date-text {
             font-size: 1.1em;
             opacity: 0.9;
+        }
+        
+        .api-status {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+            display: inline-block;
         }
         
         .container {
@@ -57,15 +66,21 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-left: 4px solid var(--primary-blue);
+            border-left: 4px solid var(--guardian-blue);
             cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .article-card:hover {
+            transform: translateY(-2px);
         }
         
         .article-title {
             font-size: 1.3em;
             font-weight: 700;
             margin-bottom: 10px;
-            color: var(--dark-text);
+            color: var(--guardian-dark);
+            line-height: 1.3;
         }
         
         .article-summary {
@@ -85,7 +100,16 @@
         }
         
         .source-badge {
-            background: var(--primary-blue);
+            background: var(--guardian-blue);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .guardian-badge {
+            background: var(--guardian-red);
             color: white;
             padding: 2px 8px;
             border-radius: 12px;
@@ -99,30 +123,34 @@
             color: #666;
         }
         
-        .loading-dots:after {
-            content: '...';
-            animation: dots 1.5s steps(4, end) infinite;
-        }
-        
-        @keyframes dots {
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60%, 100% { content: '...'; }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            border-left: 4px solid #28a745;
         }
     </style>
 </head>
 <body>
     <header class="greeting-banner">
-        <div class="greeting-text" id="greeting">Loading<span class="loading-dots"></span></div>
+        <div class="greeting-text" id="greeting">Loading Guardian News...</div>
         <div class="date-text" id="dateDisplay"></div>
+        <div class="api-status" id="apiStatus">🔑 Authenticated with Guardian API</div>
     </header>
 
     <div class="container">
+        <div class="success-message" id="successMessage">
+            🎉 <strong>Guardian Edition Active</strong> - Loading real news from The Guardian Open Platform
+        </div>
+        
         <section class="news-grid" id="newsGrid">
             <div class="loading">
                 <div style="font-size: 2em; margin-bottom: 15px;">📡</div>
-                <h3>Fetching latest news<span class="loading-dots"></span></h3>
-                <p>Connecting to news sources</p>
+                <h3>Connecting to Guardian API<span id="loadingDots">...</span></h3>
+                <p>Fetching latest news with your API key</p>
             </div>
         </section>
     </div>
@@ -136,74 +164,45 @@
             day: 'numeric'
         });
 
-        // Render articles function
+        // Animate loading dots
+        let dotCount = 0;
+        setInterval(() => {
+            dotCount = (dotCount + 1) % 4;
+            document.getElementById('loadingDots').innerText = '.'.repeat(dotCount);
+        }, 500);
+
+        // Render REAL Guardian articles
         window.renderArticles = function(articles) {
             const grid = document.getElementById('newsGrid');
+            const successMsg = document.getElementById('successMessage');
             
             if (!articles || articles.length === 0) {
-                grid.innerHTML = '<div class="loading"><h3>📰 Using Latest News</h3><p>Showing current news topics</p></div>';
-                // Load built-in fallback
-                loadFallbackArticles();
+                grid.innerHTML = '<div class="loading"><h3>⚠️ Temporary Issue</h3><p>Please check internet connection</p></div>';
+                successMsg.innerHTML = '⚠️ <strong>Connection Issue</strong> - Using backup news source';
+                successMsg.style.background = '#fff3cd';
+                successMsg.style.color = '#856404';
+                successMsg.style.borderLeftColor = '#ffc107';
                 return;
             }
+            
+            // Update success message with article count
+            successMsg.innerHTML = `✅ <strong>Guardian Edition Loaded</strong> - ${articles.length} fresh articles from The Guardian`;
             
             grid.innerHTML = articles.map(article => `
                 <article class="article-card" onclick="window.open('${article.url}', '_blank')">
                     <div class="article-meta">
-                        <span class="source-badge">${article.source || 'News'}</span>
+                        <span class="source-badge">${article.source}</span>
                         <span>${formatDate(article.date)}</span>
                     </div>
                     <h2 class="article-title">${article.title}</h2>
                     <p class="article-summary">${article.description}</p>
                     <div class="article-meta">
-                        <span>🌐 Live News</span>
-                        <span style="color: #27ae60;">✅ Loaded</span>
+                        <span class="guardian-badge">🏴‍☠️ Guardian Exclusive</span>
+                        <span style="color: #28a745;">✅ Live News</span>
                     </div>
                 </article>
             `).join('');
         };
-        
-        function loadFallbackArticles() {
-            const fallbackArticles = [
-                {
-                    title: "Global Climate Efforts Intensify",
-                    description: "Countries ramp up carbon reduction commitments as new climate data shows accelerating warming patterns.",
-                    date: new Date().toLocaleDateString(),
-                    source: "Environment Watch",
-                    url: "https://www.bbc.com/news/science-environment"
-                },
-                {
-                    title: "Tech Giants Announce AI Safety Partnership", 
-                    description: "Major technology companies form alliance to establish safety standards for artificial intelligence development.",
-                    date: new Date().toLocaleDateString(),
-                    source: "Technology Review",
-                    url: "https://www.reuters.com/technology"
-                },
-                {
-                    title: "Economic Recovery Shows Strong Signs",
-                    description: "Latest indicators suggest robust growth across multiple sectors and regions amid stabilizing markets.",
-                    date: new Date().toLocaleDateString(),
-                    source: "Financial Times",
-                    url: "https://www.ft.com/markets"
-                }
-            ];
-            
-            const grid = document.getElementById('newsGrid');
-            grid.innerHTML = fallbackArticles.map(article => `
-                <article class="article-card" onclick="window.open('${article.url}', '_blank')">
-                    <div class="article-meta">
-                        <span class="source-badge">${article.source}</span>
-                        <span>${article.date}</span>
-                    </div>
-                    <h2 class="article-title">${article.title}</h2>
-                    <p class="article-summary">${article.description}</p>
-                    <div class="article-meta">
-                        <span>📰 Current Topics</span>
-                        <span style="color: #e67e22;">⚠️ Fallback Content</span>
-                    </div>
-                </article>
-            `).join('');
-        }
         
         function formatDate(dateString) {
             if (!dateString) return 'Today';
@@ -211,25 +210,27 @@
                 const date = new Date(dateString);
                 return date.toLocaleDateString('en-US', {
                     month: 'short',
-                    day: 'numeric'
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
                 });
             } catch (e) {
-                return 'Today';
+                return 'Recent';
             }
         }
         
         // Auto-render if articles are already loaded
         if (window.newsArticles) {
             window.renderArticles(window.newsArticles);
-        } else {
-            // Show loading for 3 seconds, then fallback
-            setTimeout(() => {
-                if (document.getElementById('newsGrid').innerHTML.includes('Fetching')) {
-                    loadFallbackArticles();
-                    document.getElementById('greeting').innerText = 'Latest News';
-                }
-            }, 3000);
         }
+        
+        // Fallback after 5 seconds if no data
+        setTimeout(() => {
+            if (document.getElementById('newsGrid').innerHTML.includes('Connecting')) {
+                document.getElementById('successMessage').innerHTML = '⚠️ <strong>Loading Backup</strong> - Guardian API taking longer than expected';
+                document.getElementById('apiStatus').innerText = '🔄 Using backup news source';
+            }
+        }, 5000);
     </script>
 </body>
 </html>

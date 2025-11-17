@@ -14,49 +14,49 @@ public class NewsService {
     
     private static final String TAG = "NewsService";
     
+    // 🎉 YOUR REAL GUARDIAN API KEY!
+    private static final String GUARDIAN_API_KEY = "1f962fc0-b843-4a63-acb9-770f4c24a86e";
+    private static final String GUARDIAN_URL = "https://content.guardianapis.com/search?api-key=" + GUARDIAN_API_KEY + "&show-fields=trailText,thumbnail&page-size=12&order-by=newest&section=world|technology|business|science";
+    
     public List<NewsArticle> fetchNews() {
         List<NewsArticle> articles = new ArrayList<>();
         
-        // Try multiple RSS sources until one works
-        String[] rssSources = {
-            "https://feeds.bbci.co.uk/news/world/rss.xml",
-            "https://rss.cnn.com/rss/edition.rss", 
-            "https://feeds.reuters.com/reuters/topNews"
-        };
+        Log.d(TAG, "🚀 Starting news fetch with REAL Guardian API key!");
         
-        for (String rssUrl : rssSources) {
-            articles = fetchRSSFeed(rssUrl);
-            if (!articles.isEmpty()) {
-                Log.d(TAG, "Successfully loaded from: " + rssUrl);
-                break;
-            }
+        // FIRST: Try REAL Guardian API with your key
+        articles = fetchGuardianAPI();
+        if (!articles.isEmpty()) {
+            Log.d(TAG, "✅ GUARDIAN API SUCCESS! Loaded " + articles.size() + " real articles");
+            return articles;
         }
         
-        // If all RSS feeds fail, use fallback
-        if (articles.isEmpty()) {
-            Log.w(TAG, "All RSS feeds failed, using fallback");
-            articles = getFallbackNews();
+        // SECOND: Fallback to RSS (only if Guardian fails)
+        Log.w(TAG, "⚠️ Guardian API failed, trying RSS fallback");
+        articles = fetchReliableRSS();
+        if (!articles.isEmpty()) {
+            Log.d(TAG, "✅ RSS fallback worked: " + articles.size() + " articles");
+            return articles;
         }
         
-        return articles;
+        // FINAL: Curated news (should rarely happen now)
+        Log.w(TAG, "❌ All sources failed, using curated news");
+        return getCuratedNews();
     }
     
-    private List<NewsArticle> fetchRSSFeed(String rssUrl) {
+    private List<NewsArticle> fetchGuardianAPI() {
         List<NewsArticle> articles = new ArrayList<>();
         
         try {
-            // Use RSS2JSON proxy to avoid CORS
-            String proxyUrl = "https://api.rss2json.com/v1/api.json?rss_url=" + 
-                             java.net.URLEncoder.encode(rssUrl, "UTF-8");
-            
-            URL url = new URL(proxyUrl);
+            URL url = new URL(GUARDIAN_URL);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(10000);
             connection.setReadTimeout(10000);
+            connection.setRequestProperty("User-Agent", "TempoNewsHub/1.0");
             
+            Log.d(TAG, "📡 Calling REAL Guardian API...");
             int responseCode = connection.getResponseCode();
-            Log.d(TAG, "RSS proxy response: " + responseCode);
+            Log.d(TAG, "Guardian API response code: " + responseCode);
             
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 BufferedReader reader = new BufferedReader(
@@ -70,77 +70,171 @@ public class NewsService {
                 }
                 reader.close();
                 
-                articles = parseRSSResponse(response.toString());
+                Log.d(TAG, "✅ Guardian API response received, parsing...");
+                return parseGuardianResponse(response.toString());
+                
+            } else {
+                Log.e(TAG, "❌ Guardian API HTTP error: " + responseCode);
+                if (responseCode == 403) {
+                    Log.e(TAG, "🔑 API KEY ISSUE - Check if key is valid");
+                }
             }
             
         } catch (Exception e) {
-            Log.e(TAG, "Error fetching RSS: " + e.getMessage());
+            Log.e(TAG, "❌ Guardian API exception: " + e.getMessage());
         }
         
         return articles;
     }
     
-    private List<NewsArticle> parseRSSResponse(String jsonResponse) {
+    private List<NewsArticle> parseGuardianResponse(String jsonResponse) {
+        List<NewsArticle> articles = new ArrayList<>();
+        
+        try {
+            JSONObject json = new JSONObject(jsonResponse);
+            JSONObject response = json.getJSONObject("response");
+            JSONArray results = response.getJSONArray("results");
+            
+            Log.d(TAG, "📊 Parsing " + results.length() + " Guardian articles");
+            
+            for (int i = 0; i < results.length(); i++) {
+                JSONObject result = results.getJSONObject(i);
+                
+                NewsArticle article = new NewsArticle();
+                article.setTitle(result.getString("webTitle"));
+                article.setUrl(result.getString("webUrl"));
+                article.setDate(result.getString("webPublicationDate"));
+                article.setSource("The Guardian");
+                
+                // Get section name for better categorization
+                String section = result.optString("sectionName", "News");
+                if (!section.equals("News")) {
+                    article.setSource("Guardian " + section);
+                }
+                
+                // Get trail text if available
+                try {
+                    JSONObject fields = result.getJSONObject("fields");
+                    String trailText = fields.optString("trailText", "");
+                    if (!trailText.isEmpty()) {
+                        article.setDescription(trailText);
+                    } else {
+                        article.setDescription("Read the full story on The Guardian");
+                    }
+                } catch (Exception e) {
+                    article.setDescription("Latest news from The Guardian");
+                }
+                
+                articles.add(article);
+                
+                Log.d(TAG, "📰 Article: " + article.getTitle());
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "❌ Error parsing Guardian JSON: " + e.getMessage());
+        }
+        
+        return articles;
+    }
+    
+    private List<NewsArticle> fetchReliableRSS() {
+        List<NewsArticle> articles = new ArrayList<>();
+        
+        String[] rssSources = {
+            "https://feeds.bbci.co.uk/news/world/rss.xml",
+            "https://rss.cnn.com/rss/edition.rss"
+        };
+        
+        for (String rssUrl : rssSources) {
+            try {
+                String proxyUrl = "https://api.rss2json.com/v1/api.json?rss_url=" + 
+                                 java.net.URLEncoder.encode(rssUrl, "UTF-8");
+                
+                URL url = new URL(proxyUrl);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(8000);
+                connection.setReadTimeout(8000);
+                
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(connection.getInputStream())
+                    );
+                    
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                    reader.close();
+                    
+                    List<NewsArticle> rssArticles = parseRSSResponse(response.toString(), rssUrl);
+                    if (!rssArticles.isEmpty()) {
+                        articles.addAll(rssArticles);
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "RSS source failed: " + rssUrl);
+            }
+        }
+        
+        return articles;
+    }
+    
+    private List<NewsArticle> parseRSSResponse(String jsonResponse, String sourceUrl) {
         List<NewsArticle> articles = new ArrayList<>();
         
         try {
             JSONObject json = new JSONObject(jsonResponse);
             JSONArray items = json.getJSONArray("items");
             
-            for (int i = 0; i < Math.min(items.length(), 8); i++) {
+            String sourceName = "BBC News";
+            if (sourceUrl.contains("cnn")) sourceName = "CNN";
+            
+            for (int i = 0; i < Math.min(items.length(), 6); i++) {
                 JSONObject item = items.getJSONObject(i);
                 
                 NewsArticle article = new NewsArticle();
                 article.setTitle(item.getString("title"));
                 article.setUrl(item.getString("link"));
+                article.setSource(sourceName);
                 
-                // Parse description and clean HTML tags
                 String description = item.optString("description", "");
-                description = description.replaceAll("<[^>]*>", ""); // Remove HTML tags
-                if (description.length() > 150) {
-                    description = description.substring(0, 150) + "...";
+                description = description.replaceAll("<[^>]*>", "");
+                if (description.length() > 120) {
+                    description = description.substring(0, 120) + "...";
+                } else if (description.isEmpty()) {
+                    description = "Read the full story on " + sourceName;
                 }
                 article.setDescription(description);
                 
-                // Parse date
                 String pubDate = item.optString("pubDate", "");
                 article.setDate(pubDate);
-                
-                // Get source from feed info
-                JSONObject feed = json.optJSONObject("feed");
-                if (feed != null) {
-                    article.setSource(feed.optString("title", "News Source"));
-                } else {
-                    article.setSource("News Feed");
-                }
                 
                 articles.add(article);
             }
             
         } catch (Exception e) {
-            Log.e(TAG, "Error parsing RSS JSON: " + e.getMessage());
+            Log.e(TAG, "Error parsing RSS: " + e.getMessage());
         }
         
         return articles;
     }
     
-    private List<NewsArticle> getFallbackNews() {
+    private List<NewsArticle> getCuratedNews() {
         List<NewsArticle> articles = new ArrayList<>();
         String currentDate = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date());
         
-        // Real current news topics as fallback
-        String[][] fallbackData = {
-            {"Global Climate Conference Reaches New Agreements", "World leaders agree on enhanced emissions targets and climate funding at latest international summit.", "BBC News"},
-            {"Technology Sector Shows Strong Growth in Latest Reports", "Major tech companies report better-than-expected earnings amid AI innovation surge.", "Reuters"},
-            {"Breakthrough in Renewable Energy Storage Announced", "New battery technology promises longer storage capacity for solar and wind energy systems.", "Science Daily"},
-            {"International Markets Respond to Economic Indicators", "Global markets show mixed responses to latest inflation data and central bank policies.", "Financial Times"},
-            {"Healthcare Advances in Treatment Research Published", "New medical studies show promising results for innovative treatment approaches.", "Health News"},
-            {"Space Exploration Missions Announce New Discoveries", "Recent space missions reveal new findings about planetary systems and cosmic phenomena.", "Space News"},
-            {"Urban Development Projects Focus on Sustainability", "Cities worldwide implement green infrastructure and sustainable transportation initiatives.", "Environment News"},
-            {"Education Technology Sees Rapid Adoption Globally", "Digital learning platforms expand access to education resources across regions.", "Tech Review"}
+        String[][] newsData = {
+            {"Global Climate Conference Reaches Agreements", "World leaders agree on enhanced climate targets at latest international summit.", "World News"},
+            {"Technology Sector Reports Strong Growth", "Major tech companies exceed earnings expectations amid innovation surge.", "Tech News"},
+            {"Breakthrough in Renewable Energy Research", "New battery technology promises improved storage for sustainable energy.", "Science"},
+            {"Economic Indicators Show Positive Trends", "Markets respond to improved economic data and policy developments.", "Business"}
         };
         
-        for (String[] data : fallbackData) {
+        for (String[] data : newsData) {
             NewsArticle article = new NewsArticle();
             article.setTitle(data[0]);
             article.setDescription(data[1]);
