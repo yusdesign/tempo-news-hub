@@ -12,14 +12,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // DEBUG: Show we're alive
         Toast.makeText(this, "🚀 APP STARTED!", Toast.LENGTH_LONG).show();
         
-        WebView webView = new WebView(this);
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.setWebViewClient(new WebViewClient());
-        webView.loadUrl("file:///android_asset/news_app.html");
-        
-        setContentView(webView);
+        try {
+            WebView webView = new WebView(this);
+            webView.getSettings().setJavaScriptEnabled(true);
+            webView.getSettings().setDomStorageEnabled(true);
+            webView.setWebViewClient(new WebViewClient());
+            webView.loadUrl("file:///android_asset/news_app.html");
+            
+            setContentView(webView);
+            Toast.makeText(this, "📰 WebView Loaded!", Toast.LENGTH_SHORT).show();
+            
+        } catch (Exception e) {
+            Toast.makeText(this, "❌ WebView Failed!", Toast.LENGTH_LONG).show();
+        }
     }
 }
