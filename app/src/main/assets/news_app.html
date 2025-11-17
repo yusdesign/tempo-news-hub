@@ -59,6 +59,13 @@
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             border-left: 4px solid var(--guardian-blue);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .article-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         
         .article-title {
@@ -109,21 +116,30 @@
             cursor: pointer;
             margin: 10px 0;
         }
+        
+        .guardian-logo {
+            font-weight: bold;
+            color: var(--guardian-blue);
+        }
     </style>
 </head>
 <body>
     <!-- GREETING BANNER -->
     <header class="greeting-banner">
-        <div class="greeting-text" id="greeting">Welcome</div>
-        <div class="date-text" id="dateDisplay">Loading...</div>
+        <div class="greeting-text" id="greeting">Loading Guardian News...</div>
+        <div class="date-text" id="dateDisplay"></div>
     </header>
 
     <div class="container">
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="refresh-btn" onclick="location.reload()">🔄 Refresh News</button>
+        </div>
+        
         <section class="news-grid" id="newsGrid">
             <div class="loading">
-                <div style="font-size: 2em; margin-bottom: 15px;">⚡</div>
-                <h3>Initializing Guardian News Hub...</h3>
-                <p>Loading your personalized news</p>
+                <div style="font-size: 2em; margin-bottom: 15px;">📡</div>
+                <h3>Fetching latest from The Guardian...</h3>
+                <p>Loading real news content</p>
             </div>
         </section>
     </div>
@@ -137,35 +153,49 @@
             day: 'numeric'
         });
 
-        // Simple news loader for now - Guardian API will be added in next step
-        setTimeout(() => {
-            const articles = [
-                {
-                    title: "Guardian News Hub Ready",
-                    description: "Your personalized news experience is loading. Next step: Guardian Open Platform integration.",
-                    date: new Date().toLocaleDateString(),
-                    source: "Tempo System"
-                },
-                {
-                    title: "Daytime Greetings Active",
-                    description: "The greeting system is now working! Time-aware welcome messages are displayed.",
-                    date: new Date().toLocaleDateString(),
-                    source: "Tempo UI"
-                }
-            ];
-            
+        // Global function to render articles from Java
+        window.renderArticles = function(articles) {
             const grid = document.getElementById('newsGrid');
+            
+            if (!articles || articles.length === 0) {
+                grid.innerHTML = '<div class="loading"><h3>❌ No articles loaded</h3><p>Check connection and try again</p></div>';
+                return;
+            }
+            
             grid.innerHTML = articles.map(article => `
-                <article class="article-card">
+                <article class="article-card" onclick="window.open('${article.url}', '_blank')">
                     <div class="article-meta">
-                        <span class="source-badge">${article.source}</span>
-                        <span>${article.date}</span>
+                        <span class="source-badge">${article.source || 'The Guardian'}</span>
+                        <span>${formatDate(article.date)}</span>
                     </div>
                     <h2 class="article-title">${article.title}</h2>
                     <p class="article-summary">${article.description}</p>
+                    <div class="article-meta">
+                        <span class="guardian-logo">📰 The Guardian</span>
+                        <span style="color: #27ae60;">✅ Real News</span>
+                    </div>
                 </article>
             `).join('');
-        }, 1500);
+        };
+        
+        function formatDate(dateString) {
+            if (!dateString) return 'Today';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+            } catch (e) {
+                return 'Today';
+            }
+        }
+        
+        // Auto-render if articles are already loaded
+        if (window.guardianArticles) {
+            window.renderArticles(window.guardianArticles);
+        }
     </script>
 </body>
 </html>
