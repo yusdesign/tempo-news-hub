@@ -14,55 +14,52 @@ public class NewsService {
     
     private static final String TAG = "NewsService";
     
-    // Your REAL Guardian API Key
+    // Your WORKING Guardian API Key
     private static final String GUARDIAN_API_KEY = "1f962fc0-b843-4a63-acb9-770f4c24a86e";
     
-    // CORRECT Guardian API URL based on documentation
+    // SIMPLE Guardian API URL - Based on your working test
     private static final String GUARDIAN_URL = 
         "https://content.guardianapis.com/search?" +
         "api-key=" + GUARDIAN_API_KEY +
-        "&show-fields=trailText" +
-        "&page-size=8" +
+        "&page-size=10" +
         "&order-by=newest" +
-        "&show-tags=contributor" +
-        "&lang=en";
+        "&show-fields=trailText";
     
     public List<NewsArticle> fetchNews() {
         List<NewsArticle> articles = new ArrayList<>();
         
-        Log.d(TAG, "🚀 Starting news fetch with Guardian API");
+        Log.d(TAG, "🚀 Starting Guardian API fetch");
         
-        // FIRST: Try Guardian API (with proper error handling)
+        // Try Guardian API with simpler approach
         articles = fetchGuardianAPI();
         if (!articles.isEmpty()) {
-            Log.d(TAG, "✅ GUARDIAN API SUCCESS! Loaded " + articles.size() + " articles");
+            Log.d(TAG, "✅ GUARDIAN API SUCCESS! " + articles.size() + " articles");
             return articles;
         }
         
-        // SECOND: Try simple RSS as backup
-        Log.w(TAG, "⚠️ Guardian API failed, trying RSS backup");
-        articles = fetchSimpleRSS();
-        
-        return articles;
+        // Fallback to RSS
+        Log.w(TAG, "⚠️ Guardian API failed, using RSS");
+        return fetchSimpleRSS();
     }
     
     private List<NewsArticle> fetchGuardianAPI() {
         List<NewsArticle> articles = new ArrayList<>();
-        HttpURLConnection connection = null;
         
         try {
+            Log.d(TAG, "📡 Calling: " + GUARDIAN_URL);
+            
             URL url = new URL(GUARDIAN_URL);
-            connection = (HttpURLConnection) url.openConnection();
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(15000); // 15 seconds
-            connection.setReadTimeout(15000);
-            connection.setRequestProperty("User-Agent", "TempoNewsHub/1.0");
+            connection.setConnectTimeout(10000); // 10 seconds
+            connection.setReadTimeout(10000);
+            
+            // SIMPLE headers only
             connection.setRequestProperty("Accept", "application/json");
             
-            Log.d(TAG, "📡 Calling Guardian API: " + GUARDIAN_URL);
-            
+            Log.d(TAG, "🕐 Connecting to Guardian API...");
             int responseCode = connection.getResponseCode();
-            Log.d(TAG, "📊 Guardian API HTTP Response: " + responseCode);
+            Log.d(TAG, "📊 HTTP Response: " + responseCode);
             
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 BufferedReader reader = new BufferedReader(
@@ -76,37 +73,14 @@ public class NewsService {
                 }
                 reader.close();
                 
-                Log.d(TAG, "✅ Received Guardian API response");
+                Log.d(TAG, "✅ Received API response, length: " + response.length());
                 return parseGuardianResponse(response.toString());
-                
             } else {
-                // Handle different HTTP errors
-                Log.e(TAG, "❌ Guardian API HTTP Error: " + responseCode);
-                
-                // Try to read error stream
-                try {
-                    BufferedReader errorReader = new BufferedReader(
-                        new InputStreamReader(connection.getErrorStream())
-                    );
-                    StringBuilder errorResponse = new StringBuilder();
-                    String errorLine;
-                    while ((errorLine = errorReader.readLine()) != null) {
-                        errorResponse.append(errorLine);
-                    }
-                    errorReader.close();
-                    Log.e(TAG, "🔍 Guardian API Error Response: " + errorResponse.toString());
-                } catch (Exception e) {
-                    Log.e(TAG, "❌ Could not read error stream: " + e.getMessage());
-                }
+                Log.e(TAG, "❌ HTTP Error: " + responseCode);
             }
             
         } catch (Exception e) {
-            Log.e(TAG, "❌ Guardian API Exception: " + e.getMessage());
-            e.printStackTrace();
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
+            Log.e(TAG, "❌ Network Exception: " + e.getClass().getSimpleName() + " - " + e.getMessage());
         }
         
         return articles;
@@ -119,15 +93,14 @@ public class NewsService {
             JSONObject json = new JSONObject(jsonResponse);
             JSONObject response = json.getJSONObject("response");
             
-            // Check API status
             String status = response.optString("status", "error");
             if (!"ok".equals(status)) {
-                Log.e(TAG, "❌ Guardian API status: " + status);
+                Log.e(TAG, "❌ API Status: " + status);
                 return articles;
             }
             
             JSONArray results = response.getJSONArray("results");
-            Log.d(TAG, "📊 Parsing " + results.length() + " Guardian articles");
+            Log.d(TAG, "📊 Parsing " + results.length() + " articles");
             
             for (int i = 0; i < results.length(); i++) {
                 JSONObject result = results.getJSONObject(i);
@@ -137,19 +110,17 @@ public class NewsService {
                 article.setUrl(result.getString("webUrl"));
                 article.setDate(result.getString("webPublicationDate"));
                 
-                // Get section name for source
                 String section = result.optString("sectionName", "News");
                 article.setSource("Guardian " + section);
                 
-                // Get trail text from fields
+                // Get trail text
                 try {
                     JSONObject fields = result.getJSONObject("fields");
                     String trailText = fields.optString("trailText", "");
                     if (!trailText.isEmpty()) {
-                        // Clean HTML and limit length
                         trailText = trailText.replaceAll("<[^>]*>", "");
-                        if (trailText.length() > 140) {
-                            trailText = trailText.substring(0, 140) + "...";
+                        if (trailText.length() > 120) {
+                            trailText = trailText.substring(0, 120) + "...";
                         }
                         article.setDescription(trailText);
                     } else {
@@ -160,12 +131,12 @@ public class NewsService {
                 }
                 
                 articles.add(article);
-                Log.d(TAG, "📰 Added: " + article.getTitle());
             }
             
+            Log.d(TAG, "✅ Successfully parsed " + articles.size() + " articles");
+            
         } catch (Exception e) {
-            Log.e(TAG, "❌ Error parsing Guardian JSON: " + e.getMessage());
-            Log.d(TAG, "🔍 JSON Response: " + jsonResponse.substring(0, Math.min(500, jsonResponse.length())));
+            Log.e(TAG, "❌ Parse Error: " + e.getMessage());
         }
         
         return articles;
@@ -174,18 +145,16 @@ public class NewsService {
     private List<NewsArticle> fetchSimpleRSS() {
         List<NewsArticle> articles = new ArrayList<>();
         
-        // Simple BBC RSS as reliable backup
-        String rssUrl = "https://feeds.bbci.co.uk/news/world/rss.xml";
-        
         try {
+            String rssUrl = "https://feeds.bbci.co.uk/news/world/rss.xml";
             String proxyUrl = "https://api.rss2json.com/v1/api.json?rss_url=" + 
                              java.net.URLEncoder.encode(rssUrl, "UTF-8");
             
             URL url = new URL(proxyUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(10000);
-            connection.setReadTimeout(10000);
+            connection.setConnectTimeout(8000);
+            connection.setReadTimeout(8000);
             
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
@@ -204,10 +173,9 @@ public class NewsService {
             }
             
         } catch (Exception e) {
-            Log.e(TAG, "❌ RSS backup also failed: " + e.getMessage());
+            Log.e(TAG, "RSS backup failed: " + e.getMessage());
         }
         
-        // Final fallback
         return getCuratedNews();
     }
     
@@ -251,10 +219,9 @@ public class NewsService {
         String currentDate = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date());
         
         String[][] newsData = {
-            {"Global Climate Conference Reaches New Agreements", "World leaders agree on enhanced emissions targets at latest international summit.", "World News"},
-            {"Technology Sector Reports Strong Quarterly Results", "Major tech companies exceed earnings expectations amid AI innovation surge.", "Technology"},
-            {"Breakthrough in Renewable Energy Storage", "New battery technology promises improved capacity for solar and wind systems.", "Science"},
-            {"Economic Indicators Show Positive Trends", "Global markets respond to improved economic data and policy developments.", "Business"}
+            {"Global Climate Conference Reaches Agreements", "World leaders agree on enhanced climate targets at international summit.", "World News"},
+            {"Technology Sector Reports Strong Growth", "Tech companies exceed earnings expectations amid innovation surge.", "Technology"},
+            {"Economic Indicators Show Positive Trends", "Markets respond to improved economic data and developments.", "Business"}
         };
         
         for (String[] data : newsData) {

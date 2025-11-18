@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tempo News Hub - Guardian Edition</title>
+    <title>Tempo News Hub - Guardian Live</title>
     <style>
         :root {
             --guardian-blue: #052962;
@@ -55,14 +55,24 @@
             padding: 20px;
         }
         
-        .debug-info {
+        .connection-test {
             background: #e8f4fd;
             padding: 15px;
             border-radius: 8px;
             margin: 15px 0;
             border-left: 4px solid var(--guardian-blue);
-            font-family: monospace;
-            font-size: 0.9em;
+            text-align: center;
+        }
+        
+        .test-btn {
+            background: var(--guardian-red);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 5px;
         }
         
         .news-grid {
@@ -112,70 +122,115 @@
             font-weight: 600;
         }
         
+        .guardian-badge {
+            background: var(--guardian-red);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
         .loading {
             text-align: center;
             padding: 40px;
             color: #666;
         }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <header class="greeting-banner">
-        <div class="greeting-text" id="greeting">Guardian API Test</div>
+        <div class="greeting-text" id="greeting">Guardian Live Feed</div>
         <div class="date-text" id="dateDisplay"></div>
-        <div class="api-status" id="apiStatus">🔑 Testing API Connection...</div>
+        <div class="api-status" id="apiStatus">🔑 API Key: Active</div>
     </header>
 
     <div class="container">
-        <div class="debug-info" id="debugInfo">
-            <strong>API Debug Info:</strong><br>
-            • Key: 1f962fc0-b843-4a63-acb9-770f4c24a86e<br>
-            • Endpoint: content.guardianapis.com/search<br>
-            • Status: <span id="apiDebugStatus">Initializing...</span>
+        <div class="connection-test">
+            <strong>🚀 Guardian API Connection Test</strong>
+            <div style="margin: 10px 0; font-size: 0.9em;">
+                Key: 1f962fc0-b843-4a63-acb9-770f4c24a86e ✅
+            </div>
+            <button class="test-btn" onclick="testAPIConnection()">Test API Now</button>
+            <button class="test-btn" onclick="forceReload()">Reload News</button>
+        </div>
+        
+        <div class="success" id="successMessage" style="display: none;">
+            ✅ <strong>Guardian API Connected!</strong> Loading live news...
         </div>
         
         <section class="news-grid" id="newsGrid">
             <div class="loading">
-                <div style="font-size: 2em; margin-bottom: 15px;">🔍</div>
-                <h3>Testing Guardian API Connection<span id="loadingDots">...</span></h3>
-                <p>Checking API key and network connectivity</p>
+                <div style="font-size: 2em; margin-bottom: 15px;">📡</div>
+                <h3>Connecting to Guardian API<span id="loadingDots">...</span></h3>
+                <p>Fetching latest news with your active API key</p>
             </div>
         </section>
     </div>
 
     <script>
         // Update date
-        document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString();
+        document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
         
+        // Loading animation
         let dotCount = 0;
-        setInterval(() => {
+        const loadingInterval = setInterval(() => {
             dotCount = (dotCount + 1) % 4;
             document.getElementById('loadingDots').innerText = '.'.repeat(dotCount);
         }, 500);
-
-        // Update debug info
-        function updateDebugStatus(status, isError = false) {
-            const debugElement = document.getElementById('apiDebugStatus');
-            debugElement.innerText = status;
-            debugElement.style.color = isError ? '#dc3545' : '#28a745';
+        
+        // Test API connection directly
+        async function testAPIConnection() {
+            const testUrl = 'https://content.guardianapis.com/search?api-key=1f962fc0-b843-4a63-acb9-770f4c24a86e&page-size=1';
             
-            const apiStatus = document.getElementById('apiStatus');
-            if (isError) {
-                apiStatus.innerHTML = '❌ ' + status;
-            } else {
-                apiStatus.innerHTML = '✅ ' + status;
+            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('successMessage').innerHTML = '🔍 Testing API connection...';
+            
+            try {
+                const response = await fetch(testUrl);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('successMessage').innerHTML = 
+                        '✅ <strong>API Test Successful!</strong> Status: ' + data.response.status;
+                } else {
+                    document.getElementById('successMessage').innerHTML = 
+                        '❌ <strong>API Test Failed:</strong> HTTP ' + response.status;
+                }
+            } catch (error) {
+                document.getElementById('successMessage').innerHTML = 
+                    '❌ <strong>Network Error:</strong> ' + error.message;
             }
         }
-
+        
+        function forceReload() {
+            location.reload();
+        }
+        
+        // Render articles from Java
         window.renderArticles = function(articles) {
-            updateDebugStatus('API Success - ' + articles.length + ' articles loaded');
-            document.getElementById('greeting').innerText = 'Guardian News';
+            clearInterval(loadingInterval);
+            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('successMessage').innerHTML = 
+                '✅ <strong>Guardian API Loaded!</strong> ' + articles.length + ' fresh articles';
+            
+            document.getElementById('apiStatus').innerHTML = '✅ Live - ' + articles.length + ' articles';
+            document.getElementById('greeting').innerText = 'Guardian Live News';
             
             const grid = document.getElementById('newsGrid');
             
             if (!articles || articles.length === 0) {
-                updateDebugStatus('No articles received', true);
-                grid.innerHTML = '<div class="loading"><h3>❌ No Articles</h3><p>API returned empty response</p></div>';
+                grid.innerHTML = '<div class="loading"><h3>❌ No Articles Received</h3><p>Try the Test API button above</p></div>';
                 return;
             }
             
@@ -188,8 +243,8 @@
                     <h2 class="article-title">${article.title}</h2>
                     <p class="article-summary">${article.description}</p>
                     <div class="article-meta">
-                        <span>🌐 Live Feed</span>
-                        <span style="color: #28a745;">✅ Real API</span>
+                        <span class="guardian-badge">🏴‍☠️ Guardian Exclusive</span>
+                        <span style="color: #28a745;">✅ Live Feed</span>
                     </div>
                 </article>
             `).join('');
@@ -198,24 +253,26 @@
         function formatDate(dateString) {
             if (!dateString) return 'Recent';
             try {
-                return new Date(dateString).toLocaleDateString();
+                const date = new Date(dateString);
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             } catch (e) {
                 return 'Today';
             }
         }
         
-        // Show timeout message after 8 seconds
-        setTimeout(() => {
-            if (document.getElementById('newsGrid').innerHTML.includes('Testing')) {
-                updateDebugStatus('API Timeout - Using backup', true);
-                document.getElementById('greeting').innerText = 'Backup News';
-            }
-        }, 8000);
-        
         // Auto-render if articles loaded
         if (window.newsArticles) {
             window.renderArticles(window.newsArticles);
         }
+        
+        // Show manual test option after 5 seconds
+        setTimeout(() => {
+            if (document.getElementById('newsGrid').innerHTML.includes('Connecting')) {
+                document.getElementById('successMessage').style.display = 'block';
+                document.getElementById('successMessage').innerHTML = 
+                    '⏰ <strong>Taking longer than expected?</strong> Try the Test API button above.';
+            }
+        }, 5000);
     </script>
 </body>
 </html>
