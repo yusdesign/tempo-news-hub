@@ -55,6 +55,16 @@
             padding: 20px;
         }
         
+        .debug-info {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid var(--guardian-blue);
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
         .news-grid {
             display: grid;
             gap: 20px;
@@ -68,11 +78,6 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             border-left: 4px solid var(--guardian-blue);
             cursor: pointer;
-            transition: transform 0.2s;
-        }
-        
-        .article-card:hover {
-            transform: translateY(-2px);
         }
         
         .article-title {
@@ -80,7 +85,6 @@
             font-weight: 700;
             margin-bottom: 10px;
             color: var(--guardian-dark);
-            line-height: 1.3;
         }
         
         .article-summary {
@@ -108,85 +112,72 @@
             font-weight: 600;
         }
         
-        .guardian-badge {
-            background: var(--guardian-red);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 600;
-        }
-        
         .loading {
             text-align: center;
             padding: 40px;
             color: #666;
         }
-        
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            text-align: center;
-            border-left: 4px solid #28a745;
-        }
     </style>
 </head>
 <body>
     <header class="greeting-banner">
-        <div class="greeting-text" id="greeting">Loading Guardian News...</div>
+        <div class="greeting-text" id="greeting">Guardian API Test</div>
         <div class="date-text" id="dateDisplay"></div>
-        <div class="api-status" id="apiStatus">🔑 Authenticated with Guardian API</div>
+        <div class="api-status" id="apiStatus">🔑 Testing API Connection...</div>
     </header>
 
     <div class="container">
-        <div class="success-message" id="successMessage">
-            🎉 <strong>Guardian Edition Active</strong> - Loading real news from The Guardian Open Platform
+        <div class="debug-info" id="debugInfo">
+            <strong>API Debug Info:</strong><br>
+            • Key: 1f962fc0-b843-4a63-acb9-770f4c24a86e<br>
+            • Endpoint: content.guardianapis.com/search<br>
+            • Status: <span id="apiDebugStatus">Initializing...</span>
         </div>
         
         <section class="news-grid" id="newsGrid">
             <div class="loading">
-                <div style="font-size: 2em; margin-bottom: 15px;">📡</div>
-                <h3>Connecting to Guardian API<span id="loadingDots">...</span></h3>
-                <p>Fetching latest news with your API key</p>
+                <div style="font-size: 2em; margin-bottom: 15px;">🔍</div>
+                <h3>Testing Guardian API Connection<span id="loadingDots">...</span></h3>
+                <p>Checking API key and network connectivity</p>
             </div>
         </section>
     </div>
 
     <script>
-        // Update date immediately
-        document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-
-        // Animate loading dots
+        // Update date
+        document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString();
+        
         let dotCount = 0;
         setInterval(() => {
             dotCount = (dotCount + 1) % 4;
             document.getElementById('loadingDots').innerText = '.'.repeat(dotCount);
         }, 500);
 
-        // Render REAL Guardian articles
+        // Update debug info
+        function updateDebugStatus(status, isError = false) {
+            const debugElement = document.getElementById('apiDebugStatus');
+            debugElement.innerText = status;
+            debugElement.style.color = isError ? '#dc3545' : '#28a745';
+            
+            const apiStatus = document.getElementById('apiStatus');
+            if (isError) {
+                apiStatus.innerHTML = '❌ ' + status;
+            } else {
+                apiStatus.innerHTML = '✅ ' + status;
+            }
+        }
+
         window.renderArticles = function(articles) {
+            updateDebugStatus('API Success - ' + articles.length + ' articles loaded');
+            document.getElementById('greeting').innerText = 'Guardian News';
+            
             const grid = document.getElementById('newsGrid');
-            const successMsg = document.getElementById('successMessage');
             
             if (!articles || articles.length === 0) {
-                grid.innerHTML = '<div class="loading"><h3>⚠️ Temporary Issue</h3><p>Please check internet connection</p></div>';
-                successMsg.innerHTML = '⚠️ <strong>Connection Issue</strong> - Using backup news source';
-                successMsg.style.background = '#fff3cd';
-                successMsg.style.color = '#856404';
-                successMsg.style.borderLeftColor = '#ffc107';
+                updateDebugStatus('No articles received', true);
+                grid.innerHTML = '<div class="loading"><h3>❌ No Articles</h3><p>API returned empty response</p></div>';
                 return;
             }
-            
-            // Update success message with article count
-            successMsg.innerHTML = `✅ <strong>Guardian Edition Loaded</strong> - ${articles.length} fresh articles from The Guardian`;
             
             grid.innerHTML = articles.map(article => `
                 <article class="article-card" onclick="window.open('${article.url}', '_blank')">
@@ -197,40 +188,34 @@
                     <h2 class="article-title">${article.title}</h2>
                     <p class="article-summary">${article.description}</p>
                     <div class="article-meta">
-                        <span class="guardian-badge">🏴‍☠️ Guardian Exclusive</span>
-                        <span style="color: #28a745;">✅ Live News</span>
+                        <span>🌐 Live Feed</span>
+                        <span style="color: #28a745;">✅ Real API</span>
                     </div>
                 </article>
             `).join('');
         };
         
         function formatDate(dateString) {
-            if (!dateString) return 'Today';
+            if (!dateString) return 'Recent';
             try {
-                const date = new Date(dateString);
-                return date.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
+                return new Date(dateString).toLocaleDateString();
             } catch (e) {
-                return 'Recent';
+                return 'Today';
             }
         }
         
-        // Auto-render if articles are already loaded
+        // Show timeout message after 8 seconds
+        setTimeout(() => {
+            if (document.getElementById('newsGrid').innerHTML.includes('Testing')) {
+                updateDebugStatus('API Timeout - Using backup', true);
+                document.getElementById('greeting').innerText = 'Backup News';
+            }
+        }, 8000);
+        
+        // Auto-render if articles loaded
         if (window.newsArticles) {
             window.renderArticles(window.newsArticles);
         }
-        
-        // Fallback after 5 seconds if no data
-        setTimeout(() => {
-            if (document.getElementById('newsGrid').innerHTML.includes('Connecting')) {
-                document.getElementById('successMessage').innerHTML = '⚠️ <strong>Loading Backup</strong> - Guardian API taking longer than expected';
-                document.getElementById('apiStatus').innerText = '🔄 Using backup news source';
-            }
-        }, 5000);
     </script>
 </body>
 </html>
