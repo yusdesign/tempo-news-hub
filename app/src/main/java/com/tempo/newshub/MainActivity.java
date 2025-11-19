@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         
         String greeting = getDaytimeGreeting();
-        Toast.makeText(this, "🚀 Loading REAL Guardian articles", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "🔍 Testing Guardian API Only", Toast.LENGTH_SHORT).show();
 
         webView = new WebView(this);
         webView.getSettings().setJavaScriptEnabled(true);
@@ -85,18 +85,22 @@ public class MainActivity extends AppCompatActivity {
                 
                 final int articleCount = articles.size();
                 runOnUiThread(() -> {
-                    Toast.makeText(MainActivity.this, "✅ " + articleCount + " REAL articles", Toast.LENGTH_SHORT).show();
+                    if (articleCount > 0) {
+                        Toast.makeText(MainActivity.this, "✅ " + articleCount + " Guardian articles", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(MainActivity.this, "❌ No Guardian articles", Toast.LENGTH_LONG).show();
+                    }
                 });
                 
                 StringBuilder js = new StringBuilder("javascript:window.tempoArticles = [");
                 for (int i = 0; i < articles.size(); i++) {
                     NewsArticle article = articles.get(i);
-                    String[] tags = mapSectionToTags(article.getSource());
+                    String[] tags = extractTagsFromSource(article.getSource());
                     
                     js.append("{")
                       .append("id:'").append(i).append("',")
                       .append("title:'").append(cleanForJS(article.getTitle())).append("',")
-                      .append("description:'").append(cleanForJS(article.getDescription())).append("',")
+                      .append("description:'").append(cleanForJS("Real Guardian article - " + article.getSource())).append("',")
                       .append("source:'").append(cleanForJS(article.getSource())).append("',")
                       .append("date:'").append(cleanForJS(formatDate(article.getDate()))).append("',")
                       .append("url:'").append(cleanForJS(article.getUrl())).append("',")
@@ -111,28 +115,29 @@ public class MainActivity extends AppCompatActivity {
                 
                 final String finalJS = js.toString();
                 
-                Thread.sleep(800);
+                Thread.sleep(1000);
                 runOnUiThread(() -> {
-                    webView.evaluateJavascript(finalJS, null);
+                    webView.evaluateJavascript(finalJS, value -> {
+                        Log.d("MainActivity", "📡 Data injected to WebView");
+                    });
                 });
                 
             } catch (Exception e) {
                 e.printStackTrace();
                 runOnUiThread(() -> {
-                    Toast.makeText(MainActivity.this, "❌ Failed to load articles", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "❌ Failed to load Guardian API", Toast.LENGTH_LONG).show();
                 });
             }
         }).start();
     }
     
-    private String[] mapSectionToTags(String source) {
-        // Map Guardian sections to our tags
+    private String[] extractTagsFromSource(String source) {
         if (source.contains("world")) return new String[]{"world"};
-        if (source.contains("technology")) return new String[]{"tech"};
-        if (source.contains("artanddesign")) return new String[]{"art & design"};
+        if (source.contains("tech")) return new String[]{"tech"};
+        if (source.contains("art")) return new String[]{"art & design"};
+        if (source.contains("science")) return new String[]{"psychology"};
         if (source.contains("environment")) return new String[]{"environment"};
         if (source.contains("music")) return new String[]{"music"};
-        if (source.contains("science")) return new String[]{"psychology"};
         return new String[]{"news"};
     }
     
@@ -157,4 +162,3 @@ public class MainActivity extends AppCompatActivity {
                   .replace("\t", " ");
     }
 }
-// v2.6.43 - Fixed build issues
