@@ -3,259 +3,317 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tempo v2.6.31</title>
+    <title>📰</title>
     <style>
         :root { 
-            --guardian-blue: #052962;
-            --guardian-red: #c70000;
-            --light-bg: #f6f6f6;
-            --card-bg: #ffffff;
+            --blue: #052962;
+            --red: #c70000;
+            --dark: #121212;
+            --gray: #666;
+            --light: #f8f9fa;
         }
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body { 
-            font-family: 'Georgia', serif; 
-            background: var(--light-bg); 
-            color: #121212;
-            line-height: 1.5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.4;
+            padding-bottom: 20px;
         }
         
-        .greeting-banner {
-            background: linear-gradient(135deg, var(--guardian-blue), #1a3d7c);
-            color: white;
-            padding: 25px 20px;
-            text-align: center;
-            border-bottom: 4px solid var(--guardian-red);
+        .header {
+            background: white;
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .greeting {
+            font-size: 0.9em;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .greeting-emoji {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-        
-        .greeting-text {
-            font-size: 1.4em;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-        
-        .date-text {
-            font-size: 1em;
-            opacity: 0.9;
+            font-size: 1.1em;
         }
         
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+            max-width: 100%;
+            padding: 0 10px;
         }
         
-        .stats-bar {
-            background: var(--card-bg);
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        .tags-container {
+            padding: 12px 0;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tag:hover, .tag.active {
+            background: var(--blue);
+            color: white;
+            border-color: var(--blue);
+        }
+        
+        .stats {
+            font-size: 0.8em;
+            color: var(--gray);
+            padding: 8px 0;
             text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-left: 3px solid var(--guardian-blue);
         }
         
         .news-grid {
             display: grid;
-            gap: 15px;
+            gap: 12px;
         }
         
         .article-card {
-            background: var(--card-bg);
-            padding: 18px;
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            border-left: 4px solid var(--guardian-blue);
-            transition: all 0.3s ease;
-        }
-        
-        .article-card.expanded {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border-left: 4px solid var(--guardian-red);
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border-left: 3px solid var(--blue);
         }
         
         .article-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 12px;
             cursor: pointer;
         }
         
         .article-title {
-            font-size: 1.2em;
-            font-weight: 700;
+            font-size: 1em;
+            font-weight: 600;
             flex: 1;
             margin-right: 10px;
             line-height: 1.3;
         }
         
         .expand-btn {
-            background: var(--guardian-blue);
-            color: white;
-            border: none;
-            width: 30px;
-            height: 30px;
+            background: none;
+            border: 1px solid #e0e0e0;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            font-size: 1.2em;
+            font-size: 0.9em;
             cursor: pointer;
             flex-shrink: 0;
         }
         
+        .article-tags {
+            display: flex;
+            gap: 6px;
+            margin: 8px 0;
+            flex-wrap: wrap;
+        }
+        
+        .article-tag {
+            background: var(--light);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            color: var(--gray);
+        }
+        
         .article-content {
-            margin-top: 15px;
+            margin-top: 12px;
         }
         
         .article-summary {
-            color: #444;
-            margin-bottom: 12px;
+            color: var(--dark);
+            font-size: 0.9em;
             line-height: 1.4;
+            margin-bottom: 12px;
         }
         
         .article-actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            padding-top: 12px;
-            border-top: 1px solid #eee;
         }
         
-        .source-badge {
-            background: var(--guardian-blue);
-            color: white;
-            padding: 3px 10px;
-            border-radius: 15px;
+        .source {
             font-size: 0.8em;
-            font-weight: 600;
+            color: var(--gray);
         }
         
-        .read-btn {
-            background: var(--guardian-red);
-            color: white;
-            border: none;
-            padding: 6px 15px;
-            border-radius: 15px;
-            font-size: 0.85em;
-            cursor: pointer;
+        .read-link {
+            color: var(--blue);
+            font-size: 0.8em;
             text-decoration: none;
-            display: inline-block;
+            font-weight: 500;
         }
         
         .article-meta {
-            font-size: 0.8em;
-            color: #666;
+            font-size: 0.7em;
+            color: var(--gray);
             margin-top: 8px;
+            text-align: right;
         }
         
         .loading {
             text-align: center;
-            padding: 40px;
-            color: #666;
+            padding: 40px 20px;
+            color: var(--gray);
         }
         
-        .success-badge {
-            background: #d4edda;
-            color: #155724;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-size: 0.8em;
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-    <header class="greeting-banner">
-        <div class="greeting-emoji" id="greetingEmoji">🌅</div>
-        <div class="greeting-text" id="greeting">Good morning</div>
-        <div class="date-text" id="dateDisplay"></div>
+    <header class="header">
+        <div class="greeting">
+            <span class="greeting-emoji" id="greetingEmoji">🌅</span>
+            <span id="greeting">Loading...</span>
+        </div>
     </header>
 
     <div class="container">
-        <div class="stats-bar" id="statsBar">
-            ⏳ Loading Guardian articles...
+        <div class="tags-container" id="tagsContainer">
+            <div class="tag active" onclick="filterByTag('all')">All</div>
         </div>
+        
+        <div class="stats" id="stats">⏳ Loading articles...</div>
         
         <section class="news-grid" id="newsGrid">
             <div class="loading">
-                <h3>🔄 Initializing Tempo Reader</h3>
-                <p>Preparing your personalized news experience</p>
+                <h3>📡 Fetching news</h3>
+                <p>Connecting to Guardian API</p>
             </div>
         </section>
     </div>
 
     <script>
-        // Update date
-        document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('en-US', {
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-        });
-        
-        // Global article data and functions
+        // Global state
         window.tempoArticles = [];
+        window.currentTag = 'all';
+        window.allTags = new Set();
         
+        // Update greeting
+        document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString();
+        
+        // Main render function
         window.tempoRenderArticles = function(articles) {
             console.log('🎯 Rendering', articles.length, 'articles');
             window.tempoArticles = articles;
             
-            const statsBar = document.getElementById('statsBar');
+            // Collect all unique tags
+            window.allTags.clear();
+            articles.forEach(article => {
+                article.tags.forEach(tag => window.allTags.add(tag));
+            });
+            
+            updateTagsUI();
+            filterArticles();
+        };
+        
+        // Update tags filter UI
+        function updateTagsUI() {
+            const tagsContainer = document.getElementById('tagsContainer');
+            const tags = ['all', ...Array.from(window.allTags).sort()];
+            
+            tagsContainer.innerHTML = tags.map(tag => 
+                `<div class="tag ${tag === window.currentTag ? 'active' : ''}" onclick="filterByTag('${tag}')">
+                    ${tag.charAt(0).toUpperCase() + tag.slice(1)}
+                </div>`
+            ).join('');
+        }
+        
+        // Filter articles by tag
+        function filterByTag(tag) {
+            window.currentTag = tag;
+            updateTagsUI();
+            filterArticles();
+        }
+        
+        // Apply current filter
+        function filterArticles() {
+            const filteredArticles = window.currentTag === 'all' 
+                ? window.tempoArticles 
+                : window.tempoArticles.filter(article => 
+                    article.tags.includes(window.currentTag));
+            
+            renderArticles(filteredArticles);
+        }
+        
+        // Render articles to grid
+        function renderArticles(articles) {
+            const stats = document.getElementById('stats');
             const newsGrid = document.getElementById('newsGrid');
             
             if (!articles || articles.length === 0) {
-                statsBar.innerHTML = '❌ No articles available';
-                newsGrid.innerHTML = '<div class="loading"><h3>No content available</h3></div>';
+                stats.innerHTML = '❌ No articles found';
+                newsGrid.innerHTML = '<div class="loading"><h3>No content</h3></div>';
                 return;
             }
             
-            statsBar.innerHTML = `📊 <strong>${articles.length} Guardian Articles</strong> • Click to expand • Tap badge to read full story`;
+            stats.innerHTML = `📊 ${articles.length} articles • ${window.currentTag === 'all' ? 'All topics' : window.currentTag}`;
             
-            // Render expandable articles
             newsGrid.innerHTML = articles.map(article => `
-                <div class="article-card" id="article-${article.id}">
+                <div class="article-card fade-in" id="article-${article.id}">
                     <div class="article-header" onclick="toggleArticle(${article.id})">
                         <div class="article-title">${article.title || 'No title'}</div>
                         <button class="expand-btn">${article.expanded ? '−' : '+'}</button>
                     </div>
                     
+                    <div class="article-tags">
+                        ${article.tags.map(tag => 
+                            `<span class="article-tag" onclick="event.stopPropagation(); filterByTag('${tag}')">${tag}</span>`
+                        ).join('')}
+                    </div>
+                    
                     ${article.expanded ? `
                     <div class="article-content">
-                        <div class="article-summary">${article.description || 'No summary available. Click Read Full Story for complete article.'}</div>
+                        <div class="article-summary">${article.description}</div>
                         <div class="article-actions">
-                            <span class="source-badge">${article.source || 'Guardian'}</span>
-                            <a href="${article.url}" target="_blank" class="read-btn">Read Full Story →</a>
+                            <span class="source">${article.source || 'Guardian'}</span>
+                            <a href="${article.url}" class="read-link" target="_blank">Read on Guardian →</a>
                         </div>
-                        <div class="article-meta">📅 ${article.date} • 🌐 Direct from Guardian API</div>
+                        <div class="article-meta">${article.date}</div>
                     </div>
                     ` : ''}
                 </div>
             `).join('');
-        };
+        }
         
         // Toggle article expansion
-        window.toggleArticle = function(articleId) {
+        function toggleArticle(articleId) {
             const article = window.tempoArticles[articleId];
             if (!article) return;
             
             article.expanded = !article.expanded;
-            window.tempoRenderArticles(window.tempoArticles);
-        };
+            filterArticles(); // Re-render to show changes
+        }
         
-        // Check for existing data
+        // Initialize with existing data
         if (window.tempoArticles && window.tempoArticles.length > 0) {
             window.tempoRenderArticles(window.tempoArticles);
         }
-        
-        // Auto-expand first article after delay
-        setTimeout(() => {
-            if (window.tempoArticles.length > 0 && !window.tempoArticles[0].expanded) {
-                window.tempoArticles[0].expanded = true;
-                window.tempoRenderArticles(window.tempoArticles);
-            }
-        }, 1000);
     </script>
 </body>
 </html>
