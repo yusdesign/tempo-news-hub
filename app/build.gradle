@@ -10,8 +10,8 @@ android {
         applicationId "com.tempo.newshub"
         minSdk 21
         targetSdk 34
-        versionCode 45
-        versionName "2.6.45"
+        versionCode 46
+        versionName "2.6.46"
     }
 
     buildTypes {
