@@ -16,9 +16,17 @@ public class MainActivity extends AppCompatActivity {
     private String getDaytimeGreeting() {
         Calendar calendar = Calendar.getInstance();
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        if (hour >= 5 && hour < 12) return "Good morning";
-        else if (hour >= 12 && hour < 18) return "Good afternoon"; 
-        else return "Good evening";
+        if (hour >= 5 && hour < 12) return "Good morning 🌅";
+        else if (hour >= 12 && hour < 18) return "Good afternoon ☀️"; 
+        else return "Good evening 🌙";
+    }
+    
+    private String getGreetingEmoji() {
+        Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        if (hour >= 5 && hour < 12) return "🌅";
+        else if (hour >= 12 && hour < 18) return "☀️"; 
+        else return "🌙";
     }
 
     @Override
@@ -43,7 +51,11 @@ public class MainActivity extends AppCompatActivity {
             public void onPageFinished(WebView view, String url) {
                 // Inject greeting immediately
                 String greeting = getDaytimeGreeting();
-                String jsGreeting = "javascript:document.getElementById('greeting').innerText = '" + greeting + "';";
+                String emoji = getGreetingEmoji();
+                String jsGreeting = "javascript:{" +
+                                   "document.getElementById('greeting').innerText = '" + greeting + "';" +
+                                   "document.getElementById('greetingEmoji').innerText = '" + emoji + "';" +
+                                   "}";
                 view.evaluateJavascript(jsGreeting, null);
                 
                 // Load news data after page is ready
@@ -63,43 +75,53 @@ public class MainActivity extends AppCompatActivity {
                 
                 final int articleCount = articles.size();
                 runOnUiThread(() -> {
-                    Toast.makeText(MainActivity.this, "✅ " + articleCount + " articles loaded", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "✅ " + articleCount + " Guardian articles", Toast.LENGTH_SHORT).show();
                 });
                 
-                // Build SIMPLE JavaScript array
-                StringBuilder js = new StringBuilder("javascript:window.articlesData = [");
+                // Build JavaScript data
+                StringBuilder js = new StringBuilder("javascript:window.tempoArticles = [");
                 for (int i = 0; i < articles.size(); i++) {
                     NewsArticle article = articles.get(i);
                     js.append("{")
+                      .append("id:'").append(i).append("',")
                       .append("title:'").append(cleanForJS(article.getTitle())).append("',")
                       .append("description:'").append(cleanForJS(article.getDescription())).append("',")
                       .append("source:'").append(cleanForJS(article.getSource())).append("',")
-                      .append("date:'").append(cleanForJS(article.getDate())).append("',")
-                      .append("url:'").append(cleanForJS(article.getUrl())).append("'")
+                      .append("date:'").append(cleanForJS(formatDate(article.getDate()))).append("',")
+                      .append("url:'").append(cleanForJS(article.getUrl())).append("',")
+                      .append("expanded:false")
                       .append("}");
                     if (i < articles.size() - 1) js.append(",");
                 }
                 js.append("];");
-                js.append("if(window.renderArticles) window.renderArticles(window.articlesData);");
+                js.append("if(window.tempoRenderArticles) window.tempoRenderArticles(window.tempoArticles);");
                 
                 final String finalJS = js.toString();
                 
-                // Wait a bit for WebView to be fully ready, then inject
-                Thread.sleep(1000);
+                Thread.sleep(800);
                 runOnUiThread(() -> {
                     webView.evaluateJavascript(finalJS, value -> {
-                        // Callback to check if JS executed
-                        Toast.makeText(MainActivity.this, "📡 Data injected to WebView", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "📡 Articles ready!", Toast.LENGTH_SHORT).show();
                     });
                 });
                 
             } catch (Exception e) {
                 e.printStackTrace();
-                runOnUiThread(() -> {
-                    Toast.makeText(MainActivity.this, "❌ Load failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
             }
         }).start();
+    }
+    
+    private String formatDate(String dateString) {
+        if (dateString == null || dateString.isEmpty()) return "Today";
+        try {
+            // Simple date formatting
+            if (dateString.contains("T")) {
+                return dateString.substring(0, 10); // Just the date part
+            }
+            return dateString;
+        } catch (Exception e) {
+            return "Today";
+        }
     }
     
     private String cleanForJS(String text) {
