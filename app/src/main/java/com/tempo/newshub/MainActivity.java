@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         
         String greeting = getDaytimeGreeting();
-        Toast.makeText(this, "🚀 " + greeting, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "🚀 Loading REAL Guardian articles", Toast.LENGTH_SHORT).show();
 
         webView = new WebView(this);
         webView.getSettings().setJavaScriptEnabled(true);
@@ -85,19 +85,13 @@ public class MainActivity extends AppCompatActivity {
                 
                 final int articleCount = articles.size();
                 runOnUiThread(() -> {
-                    Toast.makeText(MainActivity.this, "🖼️ " + articleCount + " articles with images", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "✅ " + articleCount + " REAL articles", Toast.LENGTH_SHORT).show();
                 });
                 
                 StringBuilder js = new StringBuilder("javascript:window.tempoArticles = [");
                 for (int i = 0; i < articles.size(); i++) {
                     NewsArticle article = articles.get(i);
-                    String[] tags = extractTags(article);
-                    
-                    // Use actual thumbnail or fallback image
-                    String imageUrl = article.getImageUrl();
-                    if (imageUrl == null || imageUrl.isEmpty()) {
-                        imageUrl = getFallbackImage(article);
-                    }
+                    String[] tags = mapSectionToTags(article.getSource());
                     
                     js.append("{")
                       .append("id:'").append(i).append("',")
@@ -106,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
                       .append("source:'").append(cleanForJS(article.getSource())).append("',")
                       .append("date:'").append(cleanForJS(formatDate(article.getDate()))).append("',")
                       .append("url:'").append(cleanForJS(article.getUrl())).append("',")
-                      .append("image:'").append(cleanForJS(imageUrl)).append("',")
+                      .append("image:'").append(cleanForJS(article.getImageUrl())).append("',")
                       .append("tags:['").append(String.join("','", tags)).append("'],")
                       .append("expanded:false")
                       .append("}");
@@ -124,41 +118,22 @@ public class MainActivity extends AppCompatActivity {
                 
             } catch (Exception e) {
                 e.printStackTrace();
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this, "❌ Failed to load articles", Toast.LENGTH_SHORT).show();
+                });
             }
         }).start();
     }
     
-    private String[] extractTags(NewsArticle article) {
-        String source = article.getSource().toLowerCase();
-        String title = article.getTitle().toLowerCase();
-        
-        java.util.List<String> tags = new java.util.ArrayList<>();
-        
-        if (source.contains("world") || title.contains("global")) tags.add("world");
-        if (source.contains("tech") || title.contains("ai") || title.contains("digital")) tags.add("tech");
-        if (source.contains("art") || title.contains("design") || title.contains("creative")) tags.add("art & design");
-        if (title.contains("psychology") || title.contains("mental") || title.contains("mind")) tags.add("psychology");
-        if (source.contains("environment") || title.contains("climate") || title.contains("energy")) tags.add("environment");
-        if (source.contains("music") || title.contains("song") || title.contains("album")) tags.add("music");
-        
-        if (tags.isEmpty()) tags.add("news");
-        
-        return tags.toArray(new String[0]);
-    }
-    
-    private String getFallbackImage(NewsArticle article) {
-        String[] tags = extractTags(article);
-        String primaryTag = tags.length > 0 ? tags[0] : "news";
-        
-        // Simple colored gradients as fallback
-        switch (primaryTag) {
-            case "tech": return "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=200&fit=crop";
-            case "art & design": return "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=200&fit=crop";
-            case "psychology": return "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=200&fit=crop";
-            case "environment": return "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=400&h=200&fit=crop";
-            case "music": return "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=200&fit=crop";
-            default: return "https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?w=400&h=200&fit=crop";
-        }
+    private String[] mapSectionToTags(String source) {
+        // Map Guardian sections to our tags
+        if (source.contains("world")) return new String[]{"world"};
+        if (source.contains("technology")) return new String[]{"tech"};
+        if (source.contains("artanddesign")) return new String[]{"art & design"};
+        if (source.contains("environment")) return new String[]{"environment"};
+        if (source.contains("music")) return new String[]{"music"};
+        if (source.contains("science")) return new String[]{"psychology"};
+        return new String[]{"news"};
     }
     
     private String formatDate(String dateString) {

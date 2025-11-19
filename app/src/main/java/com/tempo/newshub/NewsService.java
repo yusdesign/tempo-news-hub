@@ -15,29 +15,50 @@ public class NewsService {
     private static final String TAG = "NewsService";
     private static final String GUARDIAN_API_KEY = "1f962fc0-b843-4a63-acb9-770f4c24a86e";
     
-    // Simple, reliable API call
-    private static final String GUARDIAN_URL = 
-        "https://content.guardianapis.com/search?" +
-        "api-key=" + GUARDIAN_API_KEY +
-        "&page-size=15" +
-        "&order-by=newest" +
-        "&show-fields=thumbnail,trailText";
+    // CORRECT Guardian API queries for real articles
+    private static final String[] GUARDIAN_URLS = {
+        // World news - REAL section
+        "https://content.guardianapis.com/world?api-key=" + GUARDIAN_API_KEY + "&show-fields=thumbnail,trailText&page-size=5",
+        // Technology - REAL section  
+        "https://content.guardianapis.com/technology?api-key=" + GUARDIAN_API_KEY + "&show-fields=thumbnail,trailText&page-size=5",
+        // Art & design - from Culture section
+        "https://content.guardianapis.com/artanddesign?api-key=" + GUARDIAN_API_KEY + "&show-fields=thumbnail,trailText&page-size=5",
+        // Environment - REAL section
+        "https://content.guardianapis.com/environment?api-key=" + GUARDIAN_API_KEY + "&show-fields=thumbnail,trailText&page-size=5",
+        // Music - REAL section
+        "https://content.guardianapis.com/music?api-key=" + GUARDIAN_API_KEY + "&show-fields=thumbnail,trailText&page-size=5",
+        // Science (for psychology) - REAL section
+        "https://content.guardianapis.com/science?api-key=" + GUARDIAN_API_KEY + "&show-fields=thumbnail,trailText&page-size=5"
+    };
     
     public List<NewsArticle> fetchNews() {
         List<NewsArticle> articles = new ArrayList<>();
         
-        Log.d(TAG, "🚀 Fetching Guardian articles");
+        Log.d(TAG, "🚀 Fetching REAL Guardian articles from specific sections");
+        
+        // Fetch from each REAL Guardian section
+        for (int i = 0; i < GUARDIAN_URLS.length; i++) {
+            List<NewsArticle> sectionArticles = fetchSectionArticles(GUARDIAN_URLS[i], i);
+            articles.addAll(sectionArticles);
+            Log.d(TAG, "✅ Section " + i + ": " + sectionArticles.size() + " articles");
+        }
+        
+        Log.d(TAG, "🎯 TOTAL real articles: " + articles.size());
+        return articles;
+    }
+    
+    private List<NewsArticle> fetchSectionArticles(String apiUrl, int sectionIndex) {
+        List<NewsArticle> articles = new ArrayList<>();
         
         try {
-            URL url = new URL(GUARDIAN_URL);
+            URL url = new URL(apiUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(15000);
             connection.setReadTimeout(15000);
             
-            Log.d(TAG, "📡 API Call: " + GUARDIAN_URL);
+            Log.d(TAG, "📡 Calling REAL section: " + apiUrl);
             int responseCode = connection.getResponseCode();
-            Log.d(TAG, "📊 Response: " + responseCode);
             
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 BufferedReader reader = new BufferedReader(
@@ -51,124 +72,85 @@ public class NewsService {
                 }
                 reader.close();
                 
-                articles = parseGuardianResponse(response.toString());
-                Log.d(TAG, "✅ Parsed " + articles.size() + " articles");
+                return parseSectionResponse(response.toString(), sectionIndex);
                 
             } else {
-                Log.e(TAG, "❌ HTTP Error: " + responseCode);
+                Log.e(TAG, "❌ HTTP " + responseCode + " for section " + sectionIndex);
             }
             
         } catch (Exception e) {
-            Log.e(TAG, "❌ Network error: " + e.getMessage());
-        }
-        
-        // Always ensure we have content
-        if (articles.isEmpty()) {
-            articles = getCuratedArticles();
-            Log.d(TAG, "🔄 Using curated articles: " + articles.size());
+            Log.e(TAG, "❌ Section " + sectionIndex + " error: " + e.getMessage());
         }
         
         return articles;
     }
     
-    private List<NewsArticle> parseGuardianResponse(String jsonResponse) {
+    private List<NewsArticle> parseSectionResponse(String jsonResponse, int sectionIndex) {
         List<NewsArticle> articles = new ArrayList<>();
+        String[] sections = {"world", "technology", "artanddesign", "environment", "music", "science"};
+        String currentSection = sections[sectionIndex];
         
         try {
             JSONObject json = new JSONObject(jsonResponse);
             JSONObject response = json.getJSONObject("response");
             
             if (!"ok".equals(response.optString("status", "error"))) {
+                Log.e(TAG, "❌ API status error for " + currentSection);
                 return articles;
             }
             
             JSONArray results = response.getJSONArray("results");
+            Log.d(TAG, "📊 Section '" + currentSection + "' found " + results.length() + " REAL articles");
             
             for (int i = 0; i < results.length(); i++) {
                 JSONObject result = results.getJSONObject(i);
                 
+                // THIS IS A REAL GUARDIAN ARTICLE
                 NewsArticle article = new NewsArticle();
                 article.setTitle(result.getString("webTitle"));
-                article.setUrl(result.getString("webUrl"));
+                article.setUrl(result.getString("webUrl")); // REAL article URL
                 article.setDate(result.getString("webPublicationDate"));
-                article.setSource("Guardian " + result.optString("sectionName", "News"));
+                article.setSource("Guardian " + currentSection);
                 
-                // Get thumbnail - FIX: Handle properly
+                // Get REAL thumbnail and description
                 try {
                     JSONObject fields = result.getJSONObject("fields");
+                    
+                    // REAL Guardian thumbnail
                     String thumbnail = fields.optString("thumbnail", "");
                     if (!thumbnail.isEmpty()) {
-                        // Ensure thumbnail URL is valid
+                        // Fix thumbnail URL if needed
                         if (thumbnail.startsWith("//")) {
                             thumbnail = "https:" + thumbnail;
                         }
                         article.setImageUrl(thumbnail);
-                        Log.d(TAG, "🖼️ Thumbnail: " + thumbnail);
+                        Log.d(TAG, "🖼️ REAL thumbnail: " + thumbnail);
                     }
                     
-                    // Get description
+                    // REAL Guardian trail text
                     String trailText = fields.optString("trailText", "");
                     if (!trailText.isEmpty()) {
                         trailText = cleanHtml(trailText);
-                        article.setDescription(trailText.length() > 120 ? trailText.substring(0, 120) + "..." : trailText);
+                        article.setDescription(trailText);
                     } else {
-                        article.setDescription("Read the full story on The Guardian");
+                        article.setDescription("Latest from Guardian " + currentSection);
                     }
                 } catch (Exception e) {
-                    article.setDescription("Latest news from The Guardian");
+                    article.setDescription("Real Guardian article");
                 }
                 
                 articles.add(article);
+                Log.d(TAG, "📰 REAL Article: " + article.getTitle());
             }
             
         } catch (Exception e) {
-            Log.e(TAG, "❌ Parse error: " + e.getMessage());
+            Log.e(TAG, "❌ Parse error for " + currentSection + ": " + e.getMessage());
         }
         
         return articles;
     }
     
     private String cleanHtml(String html) {
-        return html.replaceAll("<[^>]*>", "").replace("&nbsp;", " ").trim();
-    }
-    
-    private List<NewsArticle> getCuratedArticles() {
-        List<NewsArticle> articles = new ArrayList<>();
-        String currentDate = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date());
-        
-        // Curated articles with working Unsplash images
-        String[][] curatedData = {
-            {"Global Climate Summit Reaches Historic Agreement", "World leaders unite on ambitious emissions targets and climate action plans at latest UN conference.", "world", "https://images.unsplash.com/photo-1569163139394-de44cb54d0c9?w=400&h=200&fit=crop"},
-            {"AI Revolution Transforms Creative Industries", "Artificial intelligence enables breakthrough innovations in digital art, music, and design worldwide.", "tech", "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=200&fit=crop"},
-            {"Digital Art Market Experiences Exponential Growth", "Online platforms and NFT marketplaces revolutionize contemporary art creation and distribution.", "art & design", "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=200&fit=crop"},
-            {"Mental Health Apps Receive Scientific Validation", "Peer-reviewed research confirms effectiveness of digital therapy for anxiety and depression management.", "psychology", "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=200&fit=crop"},
-            {"Renewable Energy Costs Hit Record Lows Globally", "Solar and wind power become more cost-effective than traditional fossil fuels worldwide.", "environment", "https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=400&h=200&fit=crop"},
-            {"Streaming Algorithms Reshape Music Discovery", "Machine learning transforms how listeners discover new artists and music genres globally.", "music", "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=200&fit=crop"}
-        };
-        
-        for (String[] data : curatedData) {
-            NewsArticle article = new NewsArticle();
-            article.setTitle(data[0]);
-            article.setDescription(data[1]);
-            article.setDate(currentDate);
-            article.setSource("Guardian " + data[2]);
-            article.setImageUrl(data[3]);
-            article.setUrl("https://www.theguardian.com/" + getSectionSlug(data[2]));
-            articles.add(article);
-        }
-        
-        return articles;
-    }
-    
-    private String getSectionSlug(String topic) {
-        switch (topic) {
-            case "world": return "world";
-            case "tech": return "technology";
-            case "art & design": return "artanddesign";
-            case "psychology": return "science";
-            case "environment": return "environment";
-            case "music": return "music";
-            default: return "international";
-        }
+        return html.replaceAll("<[^>]*>", "").replace("&nbsp;", " ").replace("&amp;", "&").trim();
     }
 }
