@@ -15,57 +15,28 @@ public class NewsService {
     private static final String TAG = "NewsService";
     private static final String GUARDIAN_API_KEY = "1f962fc0-b843-4a63-acb9-770f4c24a86e";
     
+    // Simple working query
+    private static final String GUARDIAN_URL = 
+        "https://content.guardianapis.com/search?" +
+        "api-key=" + GUARDIAN_API_KEY +
+        "&page-size=12" +
+        "&show-fields=thumbnail,trailText";
+    
     public List<NewsArticle> fetchNews() {
         List<NewsArticle> articles = new ArrayList<>();
         
-        Log.d(TAG, "🚀 Starting Guardian API fetch with key: " + GUARDIAN_API_KEY.substring(0, 8) + "...");
-        
-        // Try multiple query approaches
-        String[] apiQueries = {
-            // Your working query
-            "https://content.guardianapis.com/search?order-by=relevance&use-date=last-modified&show-elements=all&show-fields=thumbnail&rights=developer-community&q=world,tech,development,psychology,environment,music&api-key=" + GUARDIAN_API_KEY + "&page-size=15",
-            // Fallback: simple search
-            "https://content.guardianapis.com/search?api-key=" + GUARDIAN_API_KEY + "&page-size=15&show-fields=thumbnail",
-            // Fallback: just tech news
-            "https://content.guardianapis.com/search?api-key=" + GUARDIAN_API_KEY + "&q=technology&page-size=10&show-fields=thumbnail"
-        };
-        
-        for (String apiUrl : apiQueries) {
-            articles = fetchFromAPI(apiUrl);
-            if (!articles.isEmpty()) {
-                Log.d(TAG, "✅ SUCCESS with query: " + articles.size() + " articles");
-                break;
-            }
-        }
-        
-        // If all API calls fail, use curated content
-        if (articles.isEmpty()) {
-            Log.w(TAG, "⚠️ All API calls failed, using curated content");
-            articles = getCuratedArticles();
-        }
-        
-        return articles;
-    }
-    
-    private List<NewsArticle> fetchFromAPI(String apiUrl) {
-        List<NewsArticle> articles = new ArrayList<>();
+        Log.d(TAG, "🚀 Starting Guardian API call");
         
         try {
-            Log.d(TAG, "📡 Attempting API call: " + apiUrl);
-            
-            URL url = new URL(apiUrl);
+            URL url = new URL(GUARDIAN_URL);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(20000);
-            connection.setReadTimeout(20000);
-            connection.setRequestProperty("User-Agent", "TempoNewsHub/2.6.42");
-            connection.setRequestProperty("Accept", "application/json");
+            connection.setConnectTimeout(15000);
+            connection.setReadTimeout(15000);
             
-            // Add proper headers
-            connection.setRequestProperty("Content-Type", "application/json");
-            
+            Log.d(TAG, "📡 Calling: " + GUARDIAN_URL);
             int responseCode = connection.getResponseCode();
-            Log.d(TAG, "📊 HTTP Response Code: " + responseCode);
+            Log.d(TAG, "📊 Response: " + responseCode);
             
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 BufferedReader reader = new BufferedReader(
@@ -79,54 +50,38 @@ public class NewsService {
                 }
                 reader.close();
                 
-                Log.d(TAG, "✅ Received API response, length: " + response.length());
-                articles = parseAPIResponse(response.toString());
+                articles = parseResponse(response.toString());
+                Log.d(TAG, "✅ Parsed " + articles.size() + " articles");
                 
             } else {
                 Log.e(TAG, "❌ HTTP Error: " + responseCode);
-                // Try to read error stream for more details
-                try {
-                    BufferedReader errorReader = new BufferedReader(
-                        new InputStreamReader(connection.getErrorStream())
-                    );
-                    StringBuilder errorResponse = new StringBuilder();
-                    String errorLine;
-                    while ((errorLine = errorReader.readLine()) != null) {
-                        errorResponse.append(errorLine);
-                    }
-                    errorReader.close();
-                    Log.e(TAG, "🔍 Error details: " + errorResponse.toString());
-                } catch (Exception e) {
-                    Log.e(TAG, "❌ Could not read error stream: " + e.getMessage());
-                }
             }
             
-            connection.disconnect();
-            
         } catch (Exception e) {
-            Log.e(TAG, "❌ Network exception: " + e.getClass().getSimpleName() + " - " + e.getMessage());
-            e.printStackTrace();
+            Log.e(TAG, "❌ Network error: " + e.getMessage());
+        }
+        
+        // Always return content
+        if (articles.isEmpty()) {
+            articles = getFallbackArticles();
+            Log.d(TAG, "🔄 Using fallback: " + articles.size() + " articles");
         }
         
         return articles;
     }
     
-    private List<NewsArticle> parseAPIResponse(String jsonResponse) {
+    private List<NewsArticle> parseResponse(String jsonResponse) {
         List<NewsArticle> articles = new ArrayList<>();
         
         try {
             JSONObject json = new JSONObject(jsonResponse);
             JSONObject response = json.getJSONObject("response");
             
-            String status = response.optString("status", "error");
-            if (!"ok".equals(status)) {
-                Log.e(TAG, "❌ API returned status: " + status);
-                Log.d(TAG, "🔍 Full response: " + jsonResponse);
+            if (!"ok".equals(response.optString("status", "error"))) {
                 return articles;
             }
             
             JSONArray results = response.getJSONArray("results");
-            Log.d(TAG, "📊 Found " + results.length() + " articles in API response");
             
             for (int i = 0; i < results.length(); i++) {
                 JSONObject result = results.getJSONObject(i);
@@ -137,7 +92,7 @@ public class NewsService {
                 article.setDate(result.getString("webPublicationDate"));
                 article.setSource("Guardian " + result.optString("sectionName", "News"));
                 
-                // Get thumbnail
+                // Get thumbnail and description
                 try {
                     JSONObject fields = result.getJSONObject("fields");
                     String thumbnail = fields.optString("thumbnail", "");
@@ -146,55 +101,50 @@ public class NewsService {
                             thumbnail = "https:" + thumbnail;
                         }
                         article.setImageUrl(thumbnail);
-                        Log.d(TAG, "🖼️ Thumbnail: " + thumbnail);
+                    }
+                    
+                    String trailText = fields.optString("trailText", "");
+                    if (!trailText.isEmpty()) {
+                        trailText = trailText.replaceAll("<[^>]*>", "");
+                        article.setDescription(trailText.length() > 120 ? trailText.substring(0, 120) + "..." : trailText);
+                    } else {
+                        article.setDescription("Read the full story on The Guardian");
                     }
                 } catch (Exception e) {
-                    // No thumbnail available
+                    article.setDescription("Latest news from The Guardian");
                 }
-                
-                // Set description based on section
-                String section = result.optString("sectionName", "").toLowerCase();
-                if (section.contains("world")) article.setDescription("World news and global affairs");
-                else if (section.contains("tech")) article.setDescription("Technology and innovation news");
-                else if (section.contains("art")) article.setDescription("Art and culture coverage");
-                else if (section.contains("environment")) article.setDescription("Environmental news and climate");
-                else if (section.contains("music")) article.setDescription("Music and entertainment news");
-                else if (section.contains("science")) article.setDescription("Science and research updates");
-                else article.setDescription("Latest news from The Guardian");
                 
                 articles.add(article);
             }
             
         } catch (Exception e) {
-            Log.e(TAG, "❌ JSON parse error: " + e.getMessage());
-            Log.d(TAG, "🔍 Response snippet: " + (jsonResponse.length() > 500 ? jsonResponse.substring(0, 500) + "..." : jsonResponse));
+            Log.e(TAG, "❌ Parse error: " + e.getMessage());
         }
         
         return articles;
     }
     
-    private List<NewsArticle> getCuratedArticles() {
+    private List<NewsArticle> getFallbackArticles() {
         List<NewsArticle> articles = new ArrayList<>();
         String currentDate = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date());
         
-        // High-quality curated content as fallback
-        String[][] fallbackData = {
-            {"Global Climate Conference Reaches Agreement", "World leaders agree on emissions targets and climate action plans.", "world", "https://images.unsplash.com/photo-1569163139394-de44cb54d0c9?w=400&h=200&fit=crop"},
-            {"AI Revolution Transforms Creative Industries", "Artificial intelligence enables new forms of digital art and innovation.", "tech", "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=200&fit=crop"},
-            {"Digital Art Market Experiences Growth", "Online platforms revolutionize contemporary art creation.", "art & design", "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=200&fit=crop"},
-            {"Mental Health Apps Gain Research Support", "Studies validate digital therapy tools for wellbeing.", "psychology", "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=200&fit=crop"},
-            {"Renewable Energy Costs Continue Falling", "Solar and wind power become more affordable globally.", "environment", "https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=400&h=200&fit=crop"},
-            {"Streaming Platforms Reshape Music Discovery", "Algorithms change how listeners find new artists.", "music", "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=200&fit=crop"}
+        String[][] data = {
+            {"Global Climate Conference Reaches Agreement", "World leaders unite on climate action and emissions targets.", "world", "https://images.unsplash.com/photo-1569163139394-de44cb54d0c9?w=400&h=200&fit=crop"},
+            {"AI Revolution Transforms Industries", "Artificial intelligence enables breakthrough innovations across sectors.", "tech", "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=200&fit=crop"},
+            {"Digital Art Market Continues Growth", "Online platforms reshape contemporary art creation and distribution.", "art & design", "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=200&fit=crop"},
+            {"Mental Health Apps Gain Support", "Research validates digital therapy tools for wellbeing.", "psychology", "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=200&fit=crop"},
+            {"Renewable Energy Costs Decline", "Solar and wind power become more affordable worldwide.", "environment", "https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=400&h=200&fit=crop"},
+            {"Streaming Reshapes Music Discovery", "Algorithms change how listeners find new artists.", "music", "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=200&fit=crop"}
         };
         
-        for (String[] data : fallbackData) {
+        for (String[] item : data) {
             NewsArticle article = new NewsArticle();
-            article.setTitle(data[0]);
-            article.setDescription(data[1]);
+            article.setTitle(item[0]);
+            article.setDescription(item[1]);
             article.setDate(currentDate);
-            article.setSource("Guardian " + data[2]);
-            article.setImageUrl(data[3]);
-            article.setUrl("https://www.theguardian.com/" + data[2].replace(" & ", "").replace(" ", ""));
+            article.setSource("Guardian " + item[2]);
+            article.setImageUrl(item[3]);
+            article.setUrl("https://www.theguardian.com/" + item[2].replace(" & ", ""));
             articles.add(article);
         }
         
