@@ -3,18 +3,42 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tempo</title>
+    <title>Guardian API Client</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: system-ui; background: #f5f5f5; padding: 20px; }
-        
-        .status {
-            background: white;
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8f9fa; 
             padding: 20px;
-            border-radius: 12px;
+            color: #333;
+        }
+        
+        .header {
             text-align: center;
             margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .status {
+            background: #e3f2fd;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            text-align: center;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .status.success {
+            background: #e8f5e8;
+            border-left-color: #4caf50;
+        }
+        
+        .status.error {
+            background: #ffebee;
+            border-left-color: #f44336;
         }
         
         .articles {
@@ -26,13 +50,14 @@
             background: white;
             padding: 16px;
             border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         .article-title {
             font-weight: 600;
-            margin-bottom: 8px;
             font-size: 16px;
+            line-height: 1.3;
+            margin-bottom: 8px;
         }
         
         .article-meta {
@@ -41,64 +66,104 @@
             margin-bottom: 8px;
         }
         
+        .article-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 8px;
+            background: #f5f5f5;
+        }
+        
         .loading {
             text-align: center;
             padding: 40px;
             color: #666;
         }
+        
+        .debug {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 16px 0;
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
+    <div class="header">
+        <h1>📰 Guardian API Client</h1>
+        <p>v2.6.46 - Proper API Implementation</p>
+    </div>
+    
     <div class="status" id="status">
-        <h2>🔄 Loading...</h2>
-        <p>Tempo v2.6.45 - Guardian API Test</p>
+        <h3>🔄 Initializing Guardian API Client...</h3>
+        <p>Using official Guardian API patterns</p>
+    </div>
+    
+    <div class="debug" id="debug">
+        API: content.guardianapis.com/search
+        Key: 1f962fc0-b843-4a63-acb9-770f4c24a86e
     </div>
     
     <div class="articles" id="articles">
         <div class="loading">
-            <p>Connecting to Guardian API</p>
+            <p>Loading Guardian content...</p>
         </div>
     </div>
 
     <script>
-        console.log('📱 Tempo v2.6.45 starting...');
+        console.log('🔧 Guardian API Client v2.6.46 starting...');
         
-        // Simple article renderer
-        window.tempoRenderArticles = function(articles) {
-            console.log('📦 Received:', articles.length, 'articles');
+        window.renderGuardianArticles = function(articles) {
+            console.log('🎯 API Client Result:', articles);
             
             const status = document.getElementById('status');
+            const debug = document.getElementById('debug');
             const articlesDiv = document.getElementById('articles');
             
-            if (articles.length === 0) {
-                status.innerHTML = '<h2>❌ No Articles</h2><p>Guardian API returned empty</p>';
-                articlesDiv.innerHTML = '<div class="loading"><p>Check API key and network</p></div>';
+            if (!articles || articles.length === 0) {
+                status.className = 'status error';
+                status.innerHTML = '<h3>❌ No Articles Received</h3><p>Guardian API returned empty response</p>';
+                debug.innerHTML += '\n❌ RESULT: Empty array from API client';
+                articlesDiv.innerHTML = '<div class="loading"><p>Check Android Logcat for detailed errors</p></div>';
                 return;
             }
             
-            status.innerHTML = `<h2>✅ ${articles.length} Articles</h2><p>Guardian API Success</p>`;
+            status.className = 'status success';
+            status.innerHTML = `<h3>✅ ${articles.length} Guardian Articles</h3><p>API Client Success</p>`;
+            debug.innerHTML += `\n✅ RESULT: ${articles.length} articles via proper API client`;
             
+            // Render articles
             articlesDiv.innerHTML = articles.map(article => `
                 <div class="article">
-                    <div class="article-title">${article.title || 'No title'}</div>
+                    <div class="article-title">${article.title || 'No Title'}</div>
                     <div class="article-meta">
-                        ${article.source || 'Guardian'} • ${article.date || 'Today'}
+                        ${article.source || 'Guardian'} • ${article.date || 'Recent'}
                     </div>
                     ${article.image ? 
-                        `<img src="${article.image}" style="width:100%; height:120px; object-fit:cover; border-radius:8px; margin-top:8px;">` : 
+                        `<img src="${article.image}" class="article-image" alt="${article.title}" 
+                             onerror="this.style.display='none'">` : 
                         ''
                     }
                 </div>
             `).join('');
         };
         
-        // Show loading state
+        // Show loading progress
         setTimeout(() => {
             const status = document.getElementById('status');
-            if (status.innerHTML.includes('Loading')) {
-                status.innerHTML = '<h2>⏳ Still loading...</h2><p>Please wait</p>';
+            if (status.innerHTML.includes('Initializing')) {
+                status.innerHTML = '<h3>⏳ Calling Guardian API...</h3><p>This may take a moment</p>';
             }
-        }, 3000);
+        }, 2000);
+        
+        // Auto-check if data already exists
+        if (window.guardianArticles) {
+            window.renderGuardianArticles(window.guardianArticles);
+        }
     </script>
 </body>
 </html>
