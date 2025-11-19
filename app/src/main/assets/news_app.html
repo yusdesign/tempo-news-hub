@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tempo - Real Guardian</title>
+    <title>Tempo - Guardian</title>
     <style>
         :root { 
             --blue: #052962;
@@ -57,19 +57,35 @@
         }
         
         .status-bar {
-            background: #e8f5e8;
-            color: #2d5016;
             padding: 12px;
             border-radius: 8px;
             margin: 10px 0;
             text-align: center;
             font-size: 0.9em;
-            border-left: 4px solid #4caf50;
+            border-left: 4px solid;
+        }
+        
+        .status-success {
+            background: #e8f5e8;
+            color: #2d5016;
+            border-left-color: #4caf50;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left-color: #dc3545;
+        }
+        
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left-color: #ffc107;
         }
         
         .debug-info {
-            background: #fff3cd;
-            color: #856404;
+            background: #e9ecef;
+            color: #495057;
             padding: 10px;
             border-radius: 8px;
             margin: 10px 0;
@@ -207,15 +223,6 @@
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
-        .real-badge {
-            background: #4caf50;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.7em;
-            margin-left: 8px;
-        }
     </style>
 </head>
 <body>
@@ -224,16 +231,16 @@
             <span class="greeting-emoji" id="greetingEmoji">🌅</span>
             <span id="greeting">Good morning</span>
         </div>
-        <div class="version">v2.6.41</div>
+        <div class="version">v2.6.42</div>
     </header>
 
     <div class="container">
-        <div class="status-bar" id="statusBar">
-            ✅ Using YOUR working Guardian API query...
+        <div class="status-bar status-warning" id="statusBar">
+            🔄 Connecting to Guardian API...
         </div>
         
         <div class="debug-info" id="debugInfo">
-            🔍 API: content.guardianapis.com/search?q=world,tech,development,psychology,environment,music
+            API Key: 1f962fc0-b843-4a63-... | Network: Testing...
         </div>
         
         <div class="tags-container" id="tagsContainer">
@@ -246,12 +253,12 @@
             <div class="tag" onclick="filterByTag('music')">Music</div>
         </div>
         
-        <div class="stats" id="stats">Loading REAL Guardian articles...</div>
+        <div class="stats" id="stats">Initializing news feed...</div>
         
         <section class="news-grid" id="newsGrid">
             <div class="loading">
                 <h3>Tempo News Hub</h3>
-                <p>Fetching REAL content from Guardian API</p>
+                <p>Establishing connection to Guardian API</p>
             </div>
         </section>
     </div>
@@ -261,25 +268,57 @@
         window.currentTag = 'all';
         
         window.tempoRenderArticles = function(articles) {
-            console.log('🎯 Loaded', articles.length, 'REAL Guardian articles');
+            console.log('📦 Received articles from Java:', articles);
             
             const statusBar = document.getElementById('statusBar');
             const debugInfo = document.getElementById('debugInfo');
             
-            if (articles.length === 0) {
-                statusBar.innerHTML = '❌ No articles received from API';
-                statusBar.style.background = '#f8d7da';
-                statusBar.style.color = '#721c24';
-                statusBar.style.borderLeftColor = '#dc3545';
-                debugInfo.innerHTML = '🔴 API returned empty response. Check API key and network.';
-            } else {
-                statusBar.innerHTML = `✅ Loaded ${articles.length} REAL Guardian articles with thumbnails`;
-                debugInfo.innerHTML = `🟢 API Success: ${articles.length} articles from your working query`;
+            if (!articles || articles.length === 0) {
+                statusBar.className = 'status-bar status-error';
+                statusBar.innerHTML = '❌ API returned no articles. Using fallback content.';
+                debugInfo.innerHTML = '🟡 Fallback: Curated content loaded | Check API key permissions';
+                // Load fallback articles
+                loadFallbackArticles();
+                return;
             }
+            
+            statusBar.className = 'status-bar status-success';
+            statusBar.innerHTML = `✅ Loaded ${articles.length} articles from Guardian API`;
+            debugInfo.innerHTML = `🟢 API Success | ${articles.length} real articles with images`;
             
             window.tempoArticles = articles;
             filterArticles();
         };
+        
+        function loadFallbackArticles() {
+            // Simple fallback articles
+            window.tempoArticles = [
+                {
+                    id: 0,
+                    title: "Global Climate Efforts Show Progress",
+                    description: "International cooperation leads to measurable improvements in climate targets and renewable energy adoption worldwide.",
+                    source: "Guardian World",
+                    date: new Date().toISOString().split('T')[0],
+                    url: "https://www.theguardian.com/environment",
+                    image: "https://images.unsplash.com/photo-1569163139394-de44cb54d0c9?w=400&h=200&fit=crop",
+                    tags: ["world", "environment"],
+                    expanded: false
+                },
+                {
+                    id: 1,
+                    title: "AI Revolution Transforms Creative Industries",
+                    description: "Artificial intelligence tools enable new forms of digital art, music, and design innovation across multiple sectors.",
+                    source: "Guardian Tech",
+                    date: new Date().toISOString().split('T')[0],
+                    url: "https://www.theguardian.com/technology",
+                    image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=200&fit=crop",
+                    tags: ["tech"],
+                    expanded: false
+                }
+            ];
+            
+            filterArticles();
+        }
         
         function filterByTag(tag) {
             window.currentTag = tag;
@@ -291,10 +330,8 @@
         function filterArticles() {
             const filteredArticles = window.currentTag === 'all' 
                 ? window.tempoArticles 
-                : window.tempoArticles.filter(article => {
-                    const articleText = (article.title + ' ' + article.description + ' ' + article.source).toLowerCase();
-                    return articleText.includes(window.currentTag.toLowerCase());
-                });
+                : window.tempoArticles.filter(article => 
+                    article.tags && article.tags.includes(window.currentTag));
             
             renderArticles(filteredArticles);
         }
@@ -309,14 +346,14 @@
                 return;
             }
             
-            stats.innerHTML = `${articles.length} ${window.currentTag === 'all' ? 'real' : window.currentTag} Guardian articles`;
+            stats.innerHTML = `${articles.length} ${window.currentTag === 'all' ? 'articles' : window.currentTag + ' articles'}`;
             
             newsGrid.innerHTML = articles.map(article => `
                 <div class="article-card fade-in">
-                    ${article.image ? 
-                        `<img src="${article.image}" class="article-image" alt="${article.title}">` :
-                        `<div class="article-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2em;">📰</div>`
-                    }
+                    <img src="${article.image}" 
+                         class="article-image" 
+                         alt="${article.title}"
+                         onerror="this.src='https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?w=400&h=200&fit=crop'">
                     <div class="article-content">
                         <div class="article-header" onclick="toggleArticle(${article.id})">
                             <div class="article-title">${article.title}</div>
@@ -325,15 +362,14 @@
                         
                         <div class="article-meta">
                             ${article.source} • ${article.date}
-                            <span class="real-badge">REAL</span>
                         </div>
                         
                         ${article.expanded ? `
                         <div class="article-content-expanded">
                             <div class="article-summary">${article.description}</div>
                             <div class="article-actions">
-                                <span class="source">Guardian Article</span>
-                                <span class="read-link" onclick="openArticle('${article.url}')">Read Full Article →</span>
+                                <span class="source">${article.source}</span>
+                                <span class="read-link" onclick="openArticle('${article.url}')">Read Article →</span>
                             </div>
                         </div>
                         ` : ''}
@@ -343,7 +379,7 @@
         }
         
         function openArticle(url) {
-            console.log('🔗 Opening REAL Guardian article:', url);
+            console.log('🔗 Opening:', url);
             window.open(url, '_blank');
         }
         
@@ -355,9 +391,14 @@
             filterArticles();
         }
         
-        if (window.tempoArticles && window.tempoArticles.length > 0) {
-            window.tempoRenderArticles(window.tempoArticles);
-        }
+        // Auto-load fallback if no data received
+        setTimeout(() => {
+            if (window.tempoArticles.length === 0) {
+                const statusBar = document.getElementById('statusBar');
+                statusBar.className = 'status-bar status-warning';
+                statusBar.innerHTML = '⏳ Taking longer than expected...';
+            }
+        }, 5000);
     </script>
 </body>
 </html>
