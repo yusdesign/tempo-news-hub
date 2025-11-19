@@ -3,311 +3,100 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guardian API Test</title>
+    <title>Tempo</title>
     <style>
-        :root { 
-            --blue: #052962;
-            --dark: #121212;
-            --gray: #666;
-            --light: #f8f9fa;
-        }
-        
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui; background: #f5f5f5; padding: 20px; }
         
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--light);
-            color: var(--dark);
-            line-height: 1.4;
-            padding: 0;
-        }
-        
-        .header {
+        .status {
             background: white;
-            padding: 15px;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .greeting {
-            font-size: 1em;
-            color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-        }
-        
-        .greeting-emoji {
-            font-size: 1.2em;
-        }
-        
-        .version {
-            font-size: 0.7em;
-            color: var(--gray);
-            background: var(--light);
-            padding: 4px 8px;
-            border-radius: 10px;
-        }
-        
-        .container {
-            padding: 0 10px 20px;
-        }
-        
-        .api-status {
-            background: #e3f2fd;
-            color: #0d47a1;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
+            padding: 20px;
+            border-radius: 12px;
             text-align: center;
-            border-left: 4px solid #2196f3;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
-        .api-status.error {
-            background: #ffebee;
-            color: #b71c1c;
-            border-left-color: #f44336;
-        }
-        
-        .api-status.success {
-            background: #e8f5e8;
-            color: #1b5e20;
-            border-left-color: #4caf50;
-        }
-        
-        .debug-info {
-            background: #f5f5f5;
-            color: #757575;
-            padding: 12px;
-            border-radius: 8px;
-            margin: 10px 0;
-            font-size: 0.8em;
-            font-family: monospace;
-            word-break: break-all;
-        }
-        
-        .news-grid {
+        .articles {
             display: grid;
             gap: 16px;
-            margin-top: 20px;
         }
         
-        .article-card {
+        .article {
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
-        
-        .article-image {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            background: #e0e0e0;
-        }
-        
-        .no-image {
-            width: 100%;
-            height: 180px;
-            background: #f5f5f5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #9e9e9e;
-            font-size: 0.9em;
-        }
-        
-        .article-content {
             padding: 16px;
-        }
-        
-        .article-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            cursor: pointer;
-            margin-bottom: 8px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .article-title {
-            font-size: 1.1em;
             font-weight: 600;
-            flex: 1;
-            margin-right: 12px;
-            line-height: 1.3;
-        }
-        
-        .expand-btn {
-            background: white;
-            border: 1px solid #e0e0e0;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            font-size: 1em;
-            cursor: pointer;
-            flex-shrink: 0;
+            margin-bottom: 8px;
+            font-size: 16px;
         }
         
         .article-meta {
-            font-size: 0.8em;
-            color: var(--gray);
+            font-size: 14px;
+            color: #666;
             margin-bottom: 8px;
-        }
-        
-        .article-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #f0f0f0;
-        }
-        
-        .source {
-            font-size: 0.8em;
-            color: var(--gray);
-        }
-        
-        .read-link {
-            color: var(--blue);
-            font-size: 0.85em;
-            text-decoration: none;
-            font-weight: 500;
-            cursor: pointer;
         }
         
         .loading {
             text-align: center;
-            padding: 40px 20px;
-            color: var(--gray);
-        }
-        
-        .guardian-badge {
-            background: var(--blue);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.7em;
-            margin-left: 8px;
+            padding: 40px;
+            color: #666;
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="greeting">
-            <span class="greeting-emoji" id="greetingEmoji">🌅</span>
-            <span id="greeting">Guardian API Test</span>
+    <div class="status" id="status">
+        <h2>🔄 Loading...</h2>
+        <p>Tempo v2.6.45 - Guardian API Test</p>
+    </div>
+    
+    <div class="articles" id="articles">
+        <div class="loading">
+            <p>Connecting to Guardian API</p>
         </div>
-        <div class="version">v2.6.44</div>
-    </header>
-
-    <div class="container">
-        <div class="api-status" id="apiStatus">
-            🔄 Testing Guardian API connection...
-        </div>
-        
-        <div class="debug-info" id="debugInfo">
-            API: content.guardianapis.com/search
-            Key: 1f962fc0-b843-4a63-acb9-770f4c24a86e
-            Query: world,tech,development,psychology,environment,music
-        </div>
-        
-        <section class="news-grid" id="newsGrid">
-            <div class="loading">
-                <h3>Guardian API Test</h3>
-                <p>Connecting to Guardian Open Platform...</p>
-            </div>
-        </section>
     </div>
 
     <script>
-        window.tempoArticles = [];
+        console.log('📱 Tempo v2.6.45 starting...');
         
+        // Simple article renderer
         window.tempoRenderArticles = function(articles) {
-            console.log('🔍 Guardian API Result:', articles.length, 'articles');
+            console.log('📦 Received:', articles.length, 'articles');
             
-            const apiStatus = document.getElementById('apiStatus');
-            const debugInfo = document.getElementById('debugInfo');
-            const newsGrid = document.getElementById('newsGrid');
+            const status = document.getElementById('status');
+            const articlesDiv = document.getElementById('articles');
             
             if (articles.length === 0) {
-                apiStatus.className = 'api-status error';
-                apiStatus.innerHTML = '❌ Guardian API returned NO articles';
-                debugInfo.innerHTML += '\n❌ RESULT: Empty response from Guardian API';
-                newsGrid.innerHTML = `
-                    <div class="loading">
-                        <h3>API Test Failed</h3>
-                        <p>Guardian API returned empty response</p>
-                        <div style="margin-top: 20px; font-size: 0.9em; color: #666;">
-                            Check: API Key • Network • Query Parameters
-                        </div>
-                    </div>
-                `;
+                status.innerHTML = '<h2>❌ No Articles</h2><p>Guardian API returned empty</p>';
+                articlesDiv.innerHTML = '<div class="loading"><p>Check API key and network</p></div>';
                 return;
             }
             
-            apiStatus.className = 'api-status success';
-            apiStatus.innerHTML = `✅ Guardian API SUCCESS: ${articles.length} real articles`;
-            debugInfo.innerHTML += `\n✅ RESULT: ${articles.length} Guardian articles with thumbnails`;
+            status.innerHTML = `<h2>✅ ${articles.length} Articles</h2><p>Guardian API Success</p>`;
             
-            window.tempoArticles = articles;
-            renderArticles(articles);
-        };
-        
-        function renderArticles(articles) {
-            const newsGrid = document.getElementById('newsGrid');
-            
-            newsGrid.innerHTML = articles.map(article => `
-                <div class="article-card">
-                    ${article.image ? 
-                        `<img src="${article.image}" class="article-image" alt="${article.title}">` :
-                        `<div class="no-image">No Guardian thumbnail</div>`
-                    }
-                    <div class="article-content">
-                        <div class="article-header" onclick="toggleArticle(${article.id})">
-                            <div class="article-title">${article.title}</div>
-                            <button class="expand-btn">${article.expanded ? '−' : '+'}</button>
-                        </div>
-                        
-                        <div class="article-meta">
-                            ${article.source} • ${article.date}
-                            <span class="guardian-badge">GUARDIAN</span>
-                        </div>
-                        
-                        ${article.expanded ? `
-                        <div class="article-content-expanded">
-                            <div class="article-actions">
-                                <span class="source">Real Guardian Article</span>
-                                <span class="read-link" onclick="openArticle('${article.url}')">Open on Guardian →</span>
-                            </div>
-                        </div>
-                        ` : ''}
+            articlesDiv.innerHTML = articles.map(article => `
+                <div class="article">
+                    <div class="article-title">${article.title || 'No title'}</div>
+                    <div class="article-meta">
+                        ${article.source || 'Guardian'} • ${article.date || 'Today'}
                     </div>
+                    ${article.image ? 
+                        `<img src="${article.image}" style="width:100%; height:120px; object-fit:cover; border-radius:8px; margin-top:8px;">` : 
+                        ''
+                    }
                 </div>
             `).join('');
-        }
-        
-        function openArticle(url) {
-            console.log('🔗 Opening Guardian article:', url);
-            window.open(url, '_blank');
-        }
-        
-        function toggleArticle(articleId) {
-            const article = window.tempoArticles[articleId];
-            if (!article) return;
-            
-            article.expanded = !article.expanded;
-            renderArticles(window.tempoArticles);
-        }
+        };
         
         // Show loading state
         setTimeout(() => {
-            if (window.tempoArticles.length === 0) {
-                const apiStatus = document.getElementById('apiStatus');
-                apiStatus.innerHTML = '⏳ Still connecting to Guardian API...';
+            const status = document.getElementById('status');
+            if (status.innerHTML.includes('Loading')) {
+                status.innerHTML = '<h2>⏳ Still loading...</h2><p>Please wait</p>';
             }
         }, 3000);
     </script>
