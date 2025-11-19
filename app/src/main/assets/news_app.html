@@ -95,6 +95,17 @@
             background: #f5f5f5;
         }
         
+        .image-placeholder {
+            width: 100%;
+            height: 160px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2em;
+        }
+        
         .article-content {
             padding: 16px;
         }
@@ -184,6 +195,11 @@
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        
+        .topic-emoji {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
@@ -205,12 +221,12 @@
             <div class="tag" onclick="filterByTag('music')">Music</div>
         </div>
         
-        <div class="stats" id="stats">Loading curated topics...</div>
+        <div class="stats" id="stats">Loading your curated topics...</div>
         
         <section class="news-grid" id="newsGrid">
             <div class="loading">
-                <h3>Loading your topics</h3>
-                <p>World • Tech • Art & Design • Psychology • Environment • Music</p>
+                <h3>Loading articles</h3>
+                <p>Fetching latest content across all topics</p>
             </div>
         </section>
     </div>
@@ -218,6 +234,17 @@
     <script>
         window.tempoArticles = [];
         window.currentTag = 'all';
+        
+        // Topic emojis for image placeholders
+        const topicEmojis = {
+            'world': '🌍',
+            'tech': '💻', 
+            'art & design': '🎨',
+            'psychology': '🧠',
+            'environment': '🌱',
+            'music': '🎵',
+            'default': '📰'
+        };
         
         window.tempoRenderArticles = function(articles) {
             console.log('🎯 Loaded', articles.length, 'articles');
@@ -253,9 +280,15 @@
             
             stats.innerHTML = `${articles.length} ${window.currentTag === 'all' ? 'total' : window.currentTag} articles`;
             
-            newsGrid.innerHTML = articles.map(article => `
+            newsGrid.innerHTML = articles.map(article => {
+                const primaryTag = article.tags[0] || 'default';
+                const emoji = topicEmojis[primaryTag] || topicEmojis.default;
+                
+                return `
                 <div class="article-card fade-in">
-                    <img src="${article.image}" class="article-image" alt="" onerror="this.style.display='none'">
+                    <div class="image-placeholder">
+                        ${emoji}
+                    </div>
                     <div class="article-content">
                         <div class="article-header" onclick="toggleArticle(${article.id})">
                             <div class="article-title">${article.title}</div>
@@ -273,17 +306,23 @@
                             <div class="article-summary">${article.description}</div>
                             <div class="article-actions">
                                 <span class="source">${article.source}</span>
-                                <span class="read-link" onclick="openArticle('${article.url}')">Read →</span>
+                                <span class="read-link" onclick="openArticle('${article.url}')">Read Full Article →</span>
                             </div>
                         </div>
                         ` : ''}
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
         
         function openArticle(url) {
-            window.open(url, '_blank');
+            // FIX: Ensure URL is properly formatted
+            let finalUrl = url;
+            if (!url.startsWith('http')) {
+                finalUrl = 'https://www.theguardian.com' + url;
+            }
+            window.open(finalUrl, '_blank');
         }
         
         function toggleArticle(articleId) {
@@ -297,6 +336,14 @@
         if (window.tempoArticles && window.tempoArticles.length > 0) {
             window.tempoRenderArticles(window.tempoArticles);
         }
+        
+        // Auto-expand first article
+        setTimeout(() => {
+            if (window.tempoArticles.length > 0 && !window.tempoArticles[0].expanded) {
+                window.tempoArticles[0].expanded = true;
+                filterArticles();
+            }
+        }, 1000);
     </script>
 </body>
 </html>
