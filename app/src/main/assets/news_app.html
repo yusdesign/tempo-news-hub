@@ -67,6 +67,16 @@
             border-left: 4px solid #4caf50;
         }
         
+        .debug-info {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 0.8em;
+            font-family: monospace;
+        }
+        
         .tags-container {
             padding: 15px 0 10px;
             display: flex;
@@ -197,6 +207,15 @@
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        
+        .real-badge {
+            background: #4caf50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body>
@@ -205,12 +224,16 @@
             <span class="greeting-emoji" id="greetingEmoji">🌅</span>
             <span id="greeting">Good morning</span>
         </div>
-        <div class="version">v2.6.40</div>
+        <div class="version">v2.6.41</div>
     </header>
 
     <div class="container">
         <div class="status-bar" id="statusBar">
-            ✅ Loading REAL Guardian articles from official sections...
+            ✅ Using YOUR working Guardian API query...
+        </div>
+        
+        <div class="debug-info" id="debugInfo">
+            🔍 API: content.guardianapis.com/search?q=world,tech,development,psychology,environment,music
         </div>
         
         <div class="tags-container" id="tagsContainer">
@@ -223,12 +246,12 @@
             <div class="tag" onclick="filterByTag('music')">Music</div>
         </div>
         
-        <div class="stats" id="stats">Fetching real articles...</div>
+        <div class="stats" id="stats">Loading REAL Guardian articles...</div>
         
         <section class="news-grid" id="newsGrid">
             <div class="loading">
                 <h3>Tempo News Hub</h3>
-                <p>Loading REAL Guardian content</p>
+                <p>Fetching REAL content from Guardian API</p>
             </div>
         </section>
     </div>
@@ -241,7 +264,18 @@
             console.log('🎯 Loaded', articles.length, 'REAL Guardian articles');
             
             const statusBar = document.getElementById('statusBar');
-            statusBar.innerHTML = `✅ Loaded ${articles.length} REAL Guardian articles from official sections`;
+            const debugInfo = document.getElementById('debugInfo');
+            
+            if (articles.length === 0) {
+                statusBar.innerHTML = '❌ No articles received from API';
+                statusBar.style.background = '#f8d7da';
+                statusBar.style.color = '#721c24';
+                statusBar.style.borderLeftColor = '#dc3545';
+                debugInfo.innerHTML = '🔴 API returned empty response. Check API key and network.';
+            } else {
+                statusBar.innerHTML = `✅ Loaded ${articles.length} REAL Guardian articles with thumbnails`;
+                debugInfo.innerHTML = `🟢 API Success: ${articles.length} articles from your working query`;
+            }
             
             window.tempoArticles = articles;
             filterArticles();
@@ -257,8 +291,10 @@
         function filterArticles() {
             const filteredArticles = window.currentTag === 'all' 
                 ? window.tempoArticles 
-                : window.tempoArticles.filter(article => 
-                    article.tags.includes(window.currentTag));
+                : window.tempoArticles.filter(article => {
+                    const articleText = (article.title + ' ' + article.description + ' ' + article.source).toLowerCase();
+                    return articleText.includes(window.currentTag.toLowerCase());
+                });
             
             renderArticles(filteredArticles);
         }
@@ -273,14 +309,14 @@
                 return;
             }
             
-            stats.innerHTML = `${articles.length} ${window.currentTag === 'all' ? 'real' : window.currentTag} articles`;
+            stats.innerHTML = `${articles.length} ${window.currentTag === 'all' ? 'real' : window.currentTag} Guardian articles`;
             
             newsGrid.innerHTML = articles.map(article => `
                 <div class="article-card fade-in">
-                    <img src="${article.image || 'https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?w=400&h=200&fit=crop'}" 
-                         class="article-image" 
-                         alt="${article.title}"
-                         onerror="this.src='https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?w=400&h=200&fit=crop'">
+                    ${article.image ? 
+                        `<img src="${article.image}" class="article-image" alt="${article.title}">` :
+                        `<div class="article-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2em;">📰</div>`
+                    }
                     <div class="article-content">
                         <div class="article-header" onclick="toggleArticle(${article.id})">
                             <div class="article-title">${article.title}</div>
@@ -289,14 +325,15 @@
                         
                         <div class="article-meta">
                             ${article.source} • ${article.date}
+                            <span class="real-badge">REAL</span>
                         </div>
                         
                         ${article.expanded ? `
                         <div class="article-content-expanded">
                             <div class="article-summary">${article.description}</div>
                             <div class="article-actions">
-                                <span class="source">Real Guardian Article</span>
-                                <span class="read-link" onclick="openArticle('${article.url}')">Read on Guardian →</span>
+                                <span class="source">Guardian Article</span>
+                                <span class="read-link" onclick="openArticle('${article.url}')">Read Full Article →</span>
                             </div>
                         </div>
                         ` : ''}
@@ -306,7 +343,7 @@
         }
         
         function openArticle(url) {
-            console.log('🔗 Opening REAL article:', url);
+            console.log('🔗 Opening REAL Guardian article:', url);
             window.open(url, '_blank');
         }
         
