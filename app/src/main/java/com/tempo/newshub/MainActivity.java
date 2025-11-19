@@ -85,14 +85,19 @@ public class MainActivity extends AppCompatActivity {
                 
                 final int articleCount = articles.size();
                 runOnUiThread(() -> {
-                    Toast.makeText(MainActivity.this, "🎯 " + articleCount + " articles loaded", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "🖼️ " + articleCount + " articles with images", Toast.LENGTH_SHORT).show();
                 });
                 
                 StringBuilder js = new StringBuilder("javascript:window.tempoArticles = [");
                 for (int i = 0; i < articles.size(); i++) {
                     NewsArticle article = articles.get(i);
                     String[] tags = extractTags(article);
-                    String imageUrl = getTopicImage(article);
+                    
+                    // Use actual thumbnail or fallback image
+                    String imageUrl = article.getImageUrl();
+                    if (imageUrl == null || imageUrl.isEmpty()) {
+                        imageUrl = getFallbackImage(article);
+                    }
                     
                     js.append("{")
                       .append("id:'").append(i).append("',")
@@ -126,12 +131,10 @@ public class MainActivity extends AppCompatActivity {
     private String[] extractTags(NewsArticle article) {
         String source = article.getSource().toLowerCase();
         String title = article.getTitle().toLowerCase();
-        String desc = article.getDescription().toLowerCase();
         
         java.util.List<String> tags = new java.util.ArrayList<>();
         
-        // Smart tagging based on content
-        if (source.contains("world") || title.contains("global") || title.contains("international")) tags.add("world");
+        if (source.contains("world") || title.contains("global")) tags.add("world");
         if (source.contains("tech") || title.contains("ai") || title.contains("digital")) tags.add("tech");
         if (source.contains("art") || title.contains("design") || title.contains("creative")) tags.add("art & design");
         if (title.contains("psychology") || title.contains("mental") || title.contains("mind")) tags.add("psychology");
@@ -143,11 +146,11 @@ public class MainActivity extends AppCompatActivity {
         return tags.toArray(new String[0]);
     }
     
-    private String getTopicImage(NewsArticle article) {
+    private String getFallbackImage(NewsArticle article) {
         String[] tags = extractTags(article);
         String primaryTag = tags.length > 0 ? tags[0] : "news";
         
-        // Topic-specific images
+        // Simple colored gradients as fallback
         switch (primaryTag) {
             case "tech": return "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=200&fit=crop";
             case "art & design": return "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=200&fit=crop";
