@@ -3,276 +3,72 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tempo News Hub - Guardian Live</title>
+    <title>Tempo v2.6.29</title>
     <style>
-        :root {
-            --guardian-blue: #052962;
-            --guardian-dark: #121212;
-            --guardian-light: #f6f6f6;
-            --guardian-red: #c70000;
-        }
-        
+        :root { --blue: #052962; --red: #c70000; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Georgia', serif;
-            background: var(--guardian-light);
-            color: var(--guardian-dark);
-            line-height: 1.6;
-        }
-        
-        .greeting-banner {
-            background: linear-gradient(135deg, var(--guardian-blue), #1a3d7c);
-            color: white;
-            padding: 25px 20px;
-            text-align: center;
-            border-bottom: 4px solid var(--guardian-red);
-        }
-        
-        .greeting-text {
-            font-size: 1.8em;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        
-        .date-text {
-            font-size: 1.1em;
-            opacity: 0.9;
-        }
-        
-        .api-status {
-            background: rgba(255,255,255,0.2);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            margin-top: 10px;
-            display: inline-block;
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .connection-test {
-            background: #e8f4fd;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            border-left: 4px solid var(--guardian-blue);
-            text-align: center;
-        }
-        
-        .test-btn {
-            background: var(--guardian-red);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: 600;
-            cursor: pointer;
-            margin: 10px 5px;
-        }
-        
-        .news-grid {
-            display: grid;
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .article-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-left: 4px solid var(--guardian-blue);
-            cursor: pointer;
-        }
-        
-        .article-title {
-            font-size: 1.3em;
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: var(--guardian-dark);
-        }
-        
-        .article-summary {
-            color: #444;
-            margin-bottom: 15px;
-            line-height: 1.5;
-        }
-        
-        .article-meta {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-        
-        .source-badge {
-            background: var(--guardian-blue);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 600;
-        }
-        
-        .guardian-badge {
-            background: var(--guardian-red);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 600;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-        
-        .success {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            text-align: center;
-        }
+        body { font-family: 'Georgia', serif; background: #f6f6f6; color: #121212; }
+        .banner { background: var(--blue); color: white; padding: 25px 20px; text-align: center; border-bottom: 4px solid var(--red); }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .news-grid { display: grid; gap: 20px; margin-top: 20px; }
+        .article-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid var(--blue); cursor: pointer; }
+        .article-title { font-size: 1.3em; font-weight: 700; margin-bottom: 10px; }
+        .article-meta { display: flex; justify-content: space-between; font-size: 0.9em; color: #666; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
+        .source-badge { background: var(--blue); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; }
+        .loading { text-align: center; padding: 40px; color: #666; }
     </style>
 </head>
 <body>
-    <header class="greeting-banner">
-        <div class="greeting-text" id="greeting">Guardian Live Feed</div>
+    <header class="banner">
+        <div class="greeting-text" id="greeting">Tempo v2.6.29</div>
         <div class="date-text" id="dateDisplay"></div>
-        <div class="api-status" id="apiStatus">🔑 API Key: Active</div>
     </header>
 
     <div class="container">
-        <div class="connection-test">
-            <strong>🚀 Guardian API Connection Test</strong>
-            <div style="margin: 10px 0; font-size: 0.9em;">
-                Key: 1f962fc0-b843-4a63-acb9-770f4c24a86e ✅
-            </div>
-            <button class="test-btn" onclick="testAPIConnection()">Test API Now</button>
-            <button class="test-btn" onclick="forceReload()">Reload News</button>
-        </div>
-        
-        <div class="success" id="successMessage" style="display: none;">
-            ✅ <strong>Guardian API Connected!</strong> Loading live news...
-        </div>
-        
         <section class="news-grid" id="newsGrid">
             <div class="loading">
-                <div style="font-size: 2em; margin-bottom: 15px;">📡</div>
-                <h3>Connecting to Guardian API<span id="loadingDots">...</span></h3>
-                <p>Fetching latest news with your active API key</p>
+                <h3>Loading Guardian API<span id="loadingDots">...</span></h3>
+                <p>Using key: 1f962fc0-b843-4a63-acb9-770f4c24a86e</p>
             </div>
         </section>
     </div>
 
     <script>
-        // Update date
-        document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('en-US', {
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-        });
+        document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString();
         
-        // Loading animation
         let dotCount = 0;
-        const loadingInterval = setInterval(() => {
+        setInterval(() => {
             dotCount = (dotCount + 1) % 4;
             document.getElementById('loadingDots').innerText = '.'.repeat(dotCount);
         }, 500);
-        
-        // Test API connection directly
-        async function testAPIConnection() {
-            const testUrl = 'https://content.guardianapis.com/search?api-key=1f962fc0-b843-4a63-acb9-770f4c24a86e&page-size=1';
-            
-            document.getElementById('successMessage').style.display = 'block';
-            document.getElementById('successMessage').innerHTML = '🔍 Testing API connection...';
-            
-            try {
-                const response = await fetch(testUrl);
-                if (response.ok) {
-                    const data = await response.json();
-                    document.getElementById('successMessage').innerHTML = 
-                        '✅ <strong>API Test Successful!</strong> Status: ' + data.response.status;
-                } else {
-                    document.getElementById('successMessage').innerHTML = 
-                        '❌ <strong>API Test Failed:</strong> HTTP ' + response.status;
-                }
-            } catch (error) {
-                document.getElementById('successMessage').innerHTML = 
-                    '❌ <strong>Network Error:</strong> ' + error.message;
-            }
-        }
-        
-        function forceReload() {
-            location.reload();
-        }
-        
-        // Render articles from Java
+
         window.renderArticles = function(articles) {
-            clearInterval(loadingInterval);
-            document.getElementById('successMessage').style.display = 'block';
-            document.getElementById('successMessage').innerHTML = 
-                '✅ <strong>Guardian API Loaded!</strong> ' + articles.length + ' fresh articles';
-            
-            document.getElementById('apiStatus').innerHTML = '✅ Live - ' + articles.length + ' articles';
-            document.getElementById('greeting').innerText = 'Guardian Live News';
-            
-            const grid = document.getElementById('newsGrid');
-            
             if (!articles || articles.length === 0) {
-                grid.innerHTML = '<div class="loading"><h3>❌ No Articles Received</h3><p>Try the Test API button above</p></div>';
+                document.getElementById('newsGrid').innerHTML = '<div class="loading"><h3>No articles loaded</h3></div>';
                 return;
             }
             
-            grid.innerHTML = articles.map(article => `
+            document.getElementById('greeting').innerText = articles.length + ' Guardian Articles';
+            
+            document.getElementById('newsGrid').innerHTML = articles.map(article => `
                 <article class="article-card" onclick="window.open('${article.url}', '_blank')">
                     <div class="article-meta">
                         <span class="source-badge">${article.source}</span>
-                        <span>${formatDate(article.date)}</span>
+                        <span>${article.date || 'Today'}</span>
                     </div>
                     <h2 class="article-title">${article.title}</h2>
-                    <p class="article-summary">${article.description}</p>
+                    <p>${article.description}</p>
                     <div class="article-meta">
-                        <span class="guardian-badge">🏴‍☠️ Guardian Exclusive</span>
-                        <span style="color: #28a745;">✅ Live Feed</span>
+                        <span>🌐 Guardian API</span>
+                        <span style="color: #28a745;">✅ Live</span>
                     </div>
                 </article>
             `).join('');
         };
         
-        function formatDate(dateString) {
-            if (!dateString) return 'Recent';
-            try {
-                const date = new Date(dateString);
-                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            } catch (e) {
-                return 'Today';
-            }
-        }
-        
-        // Auto-render if articles loaded
         if (window.newsArticles) {
             window.renderArticles(window.newsArticles);
         }
-        
-        // Show manual test option after 5 seconds
-        setTimeout(() => {
-            if (document.getElementById('newsGrid').innerHTML.includes('Connecting')) {
-                document.getElementById('successMessage').style.display = 'block';
-                document.getElementById('successMessage').innerHTML = 
-                    '⏰ <strong>Taking longer than expected?</strong> Try the Test API button above.';
-            }
-        }, 5000);
     </script>
 </body>
 </html>
