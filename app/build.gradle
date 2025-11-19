@@ -10,14 +10,13 @@ android {
         applicationId "com.tempo.newshub"
         minSdk 21
         targetSdk 34
-        versionCode 46
-        versionName "2.6.46"
+        versionCode 47
+        versionName "2.6.47"
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     
@@ -29,6 +28,4 @@ android {
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.10.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 }

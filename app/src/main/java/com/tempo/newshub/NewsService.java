@@ -1,19 +1,12 @@
 package com.tempo.newshub;
 
-import android.util.Log;
-import java.util.List;
-
-public class NewsService {
+// SIMPLE DATA CLASS ONLY
+public class NewsArticle {
+    public String title;
+    public String url;
+    public String date;
+    public String source;
+    public String image;
     
-    private static final String TAG = "NewsService";
-    
-    public List<NewsArticle> fetchNews() {
-        Log.d(TAG, "🚀 Starting Guardian API Client");
-        
-        GuardianAPIClient client = new GuardianAPIClient();
-        List<NewsArticle> articles = client.fetchArticles();
-        
-        Log.d(TAG, "🎯 Final result: " + articles.size() + " articles");
-        return articles;
-    }
+    public NewsArticle() {}
 }
