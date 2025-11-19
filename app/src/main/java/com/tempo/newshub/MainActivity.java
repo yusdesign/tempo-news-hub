@@ -11,6 +11,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
     
     private WebView webView;
+    private boolean articlesLoaded = false;
     
     private String getDaytimeGreeting() {
         Calendar calendar = Calendar.getInstance();
@@ -31,12 +32,7 @@ public class MainActivity extends AppCompatActivity {
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setDomStorageEnabled(true);
         
-        // FIX: Allow WebView to make network requests
-        webView.getSettings().setAllowFileAccess(true);
-        
         setupWebView();
-        loadNewsData(greeting);
-        
         webView.loadUrl("file:///android_asset/news_app.html");
         setContentView(webView);
     }
@@ -46,58 +42,72 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 // Inject greeting immediately
-                String js = "javascript:{" +
-                           "document.getElementById('greeting').innerText = '" + getDaytimeGreeting() + "';" +
-                           "}";
-                view.evaluateJavascript(js, null);
+                String greeting = getDaytimeGreeting();
+                String jsGreeting = "javascript:document.getElementById('greeting').innerText = '" + greeting + "';";
+                view.evaluateJavascript(jsGreeting, null);
+                
+                // Load news data after page is ready
+                if (!articlesLoaded) {
+                    loadNewsData();
+                    articlesLoaded = true;
+                }
             }
         });
     }
     
-    private void loadNewsData(String greeting) {
+    private void loadNewsData() {
         new Thread(() -> {
             try {
                 NewsService newsService = new NewsService();
                 List<NewsArticle> articles = newsService.fetchNews();
                 
-                StringBuilder articlesJson = new StringBuilder("[");
+                final int articleCount = articles.size();
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this, "✅ " + articleCount + " articles loaded", Toast.LENGTH_SHORT).show();
+                });
+                
+                // Build SIMPLE JavaScript array
+                StringBuilder js = new StringBuilder("javascript:window.articlesData = [");
                 for (int i = 0; i < articles.size(); i++) {
                     NewsArticle article = articles.get(i);
-                    articlesJson.append("{")
-                        .append("\"title\":\"").append(escapeJson(article.getTitle())).append("\",")
-                        .append("\"description\":\"").append(escapeJson(article.getDescription())).append("\",")
-                        .append("\"date\":\"").append(escapeJson(article.getDate())).append("\",")
-                        .append("\"source\":\"").append(escapeJson(article.getSource())).append("\",")
-                        .append("\"url\":\"").append(escapeJson(article.getUrl())).append("\"")
-                        .append("}");
-                    if (i < articles.size() - 1) articlesJson.append(",");
+                    js.append("{")
+                      .append("title:'").append(cleanForJS(article.getTitle())).append("',")
+                      .append("description:'").append(cleanForJS(article.getDescription())).append("',")
+                      .append("source:'").append(cleanForJS(article.getSource())).append("',")
+                      .append("date:'").append(cleanForJS(article.getDate())).append("',")
+                      .append("url:'").append(cleanForJS(article.getUrl())).append("'")
+                      .append("}");
+                    if (i < articles.size() - 1) js.append(",");
                 }
-                articlesJson.append("]");
+                js.append("];");
+                js.append("if(window.renderArticles) window.renderArticles(window.articlesData);");
                 
-                final String finalJson = articlesJson.toString();
+                final String finalJS = js.toString();
                 
+                // Wait a bit for WebView to be fully ready, then inject
+                Thread.sleep(1000);
                 runOnUiThread(() -> {
-                    String js = "javascript:{" +
-                                "window.newsArticles = " + finalJson + ";" +
-                                "if(window.renderArticles) window.renderArticles(" + finalJson + ");" +
-                                "}";
-                    webView.evaluateJavascript(js, null);
-                    Toast.makeText(MainActivity.this, "✅ " + articles.size() + " articles loaded", Toast.LENGTH_SHORT).show();
+                    webView.evaluateJavascript(finalJS, value -> {
+                        // Callback to check if JS executed
+                        Toast.makeText(MainActivity.this, "📡 Data injected to WebView", Toast.LENGTH_SHORT).show();
+                    });
                 });
                 
             } catch (Exception e) {
                 e.printStackTrace();
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this, "❌ Load failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
             }
         }).start();
     }
     
-    private String escapeJson(String text) {
+    private String cleanForJS(String text) {
         if (text == null) return "";
-        return text.replace("\\", "\\\\")
+        return text.replace("'", "\\'")
                   .replace("\"", "\\\"")
-                  .replace("\n", "\\n")
-                  .replace("\r", "\\r")
-                  .replace("\t", "\\t")
-                  .replace("'", "\\'");
+                  .replace("\n", " ")
+                  .replace("\r", " ")
+                  .replace("\t", " ");
     }
 }
