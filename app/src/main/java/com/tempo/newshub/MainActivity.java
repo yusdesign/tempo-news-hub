@@ -117,9 +117,8 @@ public class MainActivity extends AppCompatActivity {
                 
                 Thread.sleep(1000);
                 runOnUiThread(() -> {
-                    webView.evaluateJavascript(finalJS, value -> {
-                        Log.d("MainActivity", "📡 Data injected to WebView");
-                    });
+                    webView.evaluateJavascript(finalJS, null);
+                    // Data injected silently
                 });
                 
             } catch (Exception e) {
