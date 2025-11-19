@@ -54,6 +54,7 @@
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
+            justify-content: center;
         }
         
         .tag {
@@ -81,15 +82,25 @@
         
         .news-grid {
             display: grid;
-            gap: 12px;
+            gap: 15px;
         }
         
         .article-card {
             background: white;
-            padding: 15px;
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            border-left: 3px solid var(--blue);
+            overflow: hidden;
+        }
+        
+        .article-image {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+        
+        .article-content {
+            padding: 15px;
         }
         
         .article-header {
@@ -131,10 +142,7 @@
             border-radius: 10px;
             font-size: 0.7em;
             color: var(--gray);
-        }
-        
-        .article-content {
-            margin-top: 12px;
+            cursor: pointer;
         }
         
         .article-summary {
@@ -160,6 +168,7 @@
             font-size: 0.8em;
             text-decoration: none;
             font-weight: 500;
+            cursor: pointer;
         }
         
         .article-meta {
@@ -183,6 +192,14 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        
+        .instruction {
+            text-align: center;
+            font-size: 0.8em;
+            color: var(--gray);
+            margin: 10px 0;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -194,16 +211,21 @@
     </header>
 
     <div class="container">
+        <div class="instruction">Tap tags to filter • Expand articles for details</div>
+        
         <div class="tags-container" id="tagsContainer">
             <div class="tag active" onclick="filterByTag('all')">All</div>
+            <div class="tag" onclick="filterByTag('world')">World</div>
+            <div class="tag" onclick="filterByTag('tech')">Tech</div>
+            <div class="tag" onclick="filterByTag('business')">Business</div>
         </div>
         
         <div class="stats" id="stats">⏳ Loading articles...</div>
         
         <section class="news-grid" id="newsGrid">
             <div class="loading">
-                <h3>📡 Fetching news</h3>
-                <p>Connecting to Guardian API</p>
+                <h3>📡 Fetching latest news</h3>
+                <p>Loading from Guardian API with images</p>
             </div>
         </section>
     </div>
@@ -212,18 +234,19 @@
         // Global state
         window.tempoArticles = [];
         window.currentTag = 'all';
-        window.allTags = new Set();
+        window.allTags = new Set(['world', 'tech', 'business', 'science', 'environment', 'health', 'politics', 'culture', 'sports']);
         
         // Update greeting
         document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString();
         
         // Main render function
         window.tempoRenderArticles = function(articles) {
-            console.log('🎯 Rendering', articles.length, 'articles');
+            console.log('🎯 Rendering', articles.length, 'articles with images');
             window.tempoArticles = articles;
             
-            // Collect all unique tags
+            // Collect all unique tags from articles
             window.allTags.clear();
+            window.allTags.add('all'); // Always include 'all'
             articles.forEach(article => {
                 article.tags.forEach(tag => window.allTags.add(tag));
             });
@@ -235,9 +258,14 @@
         // Update tags filter UI
         function updateTagsUI() {
             const tagsContainer = document.getElementById('tagsContainer');
-            const tags = ['all', ...Array.from(window.allTags).sort()];
+            const tags = Array.from(window.allTags).sort();
             
-            tagsContainer.innerHTML = tags.map(tag => 
+            // Show most relevant tags first
+            const popularTags = ['all', 'world', 'tech', 'business', 'science', 'environment', 'politics'];
+            const otherTags = tags.filter(tag => !popularTags.includes(tag));
+            const sortedTags = [...popularTags.filter(tag => tags.includes(tag)), ...otherTags];
+            
+            tagsContainer.innerHTML = sortedTags.map(tag => 
                 `<div class="tag ${tag === window.currentTag ? 'active' : ''}" onclick="filterByTag('${tag}')">
                     ${tag.charAt(0).toUpperCase() + tag.slice(1)}
                 </div>`
@@ -267,38 +295,46 @@
             const newsGrid = document.getElementById('newsGrid');
             
             if (!articles || articles.length === 0) {
-                stats.innerHTML = '❌ No articles found';
-                newsGrid.innerHTML = '<div class="loading"><h3>No content</h3></div>';
+                stats.innerHTML = '🔍 No articles found for this topic';
+                newsGrid.innerHTML = '<div class="loading"><h3>Try another topic</h3></div>';
                 return;
             }
             
-            stats.innerHTML = `📊 ${articles.length} articles • ${window.currentTag === 'all' ? 'All topics' : window.currentTag}`;
+            stats.innerHTML = `📊 ${articles.length} ${window.currentTag === 'all' ? 'total' : window.currentTag} articles`;
             
             newsGrid.innerHTML = articles.map(article => `
                 <div class="article-card fade-in" id="article-${article.id}">
-                    <div class="article-header" onclick="toggleArticle(${article.id})">
-                        <div class="article-title">${article.title || 'No title'}</div>
-                        <button class="expand-btn">${article.expanded ? '−' : '+'}</button>
-                    </div>
-                    
-                    <div class="article-tags">
-                        ${article.tags.map(tag => 
-                            `<span class="article-tag" onclick="event.stopPropagation(); filterByTag('${tag}')">${tag}</span>`
-                        ).join('')}
-                    </div>
-                    
-                    ${article.expanded ? `
+                    <img src="${article.image}" class="article-image" alt="${article.title}" onerror="this.style.display='none'">
                     <div class="article-content">
-                        <div class="article-summary">${article.description}</div>
-                        <div class="article-actions">
-                            <span class="source">${article.source || 'Guardian'}</span>
-                            <a href="${article.url}" class="read-link" target="_blank">Read on Guardian →</a>
+                        <div class="article-header" onclick="toggleArticle(${article.id})">
+                            <div class="article-title">${article.title || 'No title'}</div>
+                            <button class="expand-btn">${article.expanded ? '−' : '+'}</button>
                         </div>
-                        <div class="article-meta">${article.date}</div>
+                        
+                        <div class="article-tags">
+                            ${article.tags.map(tag => 
+                                `<span class="article-tag" onclick="event.stopPropagation(); filterByTag('${tag}')">${tag}</span>`
+                            ).join('')}
+                        </div>
+                        
+                        ${article.expanded ? `
+                        <div class="article-content-expanded">
+                            <div class="article-summary">${article.description}</div>
+                            <div class="article-actions">
+                                <span class="source">${article.source || 'Guardian'}</span>
+                                <span class="read-link" onclick="openArticle('${article.url}')">Read on Guardian →</span>
+                            </div>
+                            <div class="article-meta">${article.date}</div>
+                        </div>
+                        ` : ''}
                     </div>
-                    ` : ''}
                 </div>
             `).join('');
+        }
+        
+        // Open article in browser
+        function openArticle(url) {
+            window.open(url, '_blank');
         }
         
         // Toggle article expansion
@@ -314,6 +350,14 @@
         if (window.tempoArticles && window.tempoArticles.length > 0) {
             window.tempoRenderArticles(window.tempoArticles);
         }
+        
+        // Auto-expand first article
+        setTimeout(() => {
+            if (window.tempoArticles.length > 0 && !window.tempoArticles[0].expanded) {
+                window.tempoArticles[0].expanded = true;
+                filterArticles();
+            }
+        }, 1500);
     </script>
 </body>
 </html>

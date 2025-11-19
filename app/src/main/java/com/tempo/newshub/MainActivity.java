@@ -49,12 +49,14 @@ public class MainActivity extends AppCompatActivity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                // FIX: Open external links in browser instead of WebView
+                // FIX: Properly handle external URLs
                 if (url.startsWith("http")) {
-                    // Let system handle it (opens in browser)
-                    return false;
+                    // Use Android's intent system to open in browser
+                    android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url));
+                    startActivity(intent);
+                    return true; // We handled it
                 }
-                return true;
+                return false;
             }
 
             @Override
@@ -87,11 +89,12 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "📰 " + articleCount + " articles", Toast.LENGTH_SHORT).show();
                 });
                 
-                // Build enhanced article data with tags
+                // Build enhanced article data with tags and images
                 StringBuilder js = new StringBuilder("javascript:window.tempoArticles = [");
                 for (int i = 0; i < articles.size(); i++) {
                     NewsArticle article = articles.get(i);
                     String[] tags = extractTags(article);
+                    String imageUrl = getImageForArticle(article, i);
                     
                     js.append("{")
                       .append("id:'").append(i).append("',")
@@ -100,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
                       .append("source:'").append(cleanForJS(article.getSource())).append("',")
                       .append("date:'").append(cleanForJS(formatDate(article.getDate()))).append("',")
                       .append("url:'").append(cleanForJS(article.getUrl())).append("',")
+                      .append("image:'").append(cleanForJS(imageUrl)).append("',")
                       .append("tags:['").append(String.join("','", tags)).append("'],")
                       .append("expanded:false")
                       .append("}");
@@ -122,24 +126,58 @@ public class MainActivity extends AppCompatActivity {
     }
     
     private String[] extractTags(NewsArticle article) {
-        // Extract tags from source and content
         String source = article.getSource().toLowerCase();
         String title = article.getTitle().toLowerCase();
+        String desc = article.getDescription().toLowerCase();
         
         java.util.List<String> tags = new java.util.ArrayList<>();
         
-        // Source-based tags
-        if (source.contains("world") || title.contains("global")) tags.add("world");
-        if (source.contains("tech") || title.contains("ai") || title.contains("digital")) tags.add("tech");
-        if (source.contains("business") || title.contains("economy")) tags.add("business");
-        if (source.contains("science") || title.contains("research")) tags.add("science");
-        if (source.contains("environment") || title.contains("climate")) tags.add("environment");
-        if (source.contains("health") || title.contains("medical")) tags.add("health");
+        // Enhanced tag extraction
+        if (source.contains("world") || title.contains("global") || title.contains("international")) tags.add("world");
+        if (source.contains("tech") || title.contains("ai") || title.contains("digital") || title.contains("software")) tags.add("tech");
+        if (source.contains("business") || title.contains("economy") || title.contains("market") || title.contains("finance")) tags.add("business");
+        if (source.contains("science") || title.contains("research") || title.contains("study")) tags.add("science");
+        if (source.contains("environment") || title.contains("climate") || title.contains("energy") || title.contains("sustainable")) tags.add("environment");
+        if (source.contains("health") || title.contains("medical") || title.contains("healthcare") || title.contains("medicine")) tags.add("health");
+        if (source.contains("politics") || title.contains("government") || title.contains("election")) tags.add("politics");
+        if (source.contains("culture") || title.contains("art") || title.contains("film") || title.contains("music")) tags.add("culture");
+        if (source.contains("sports") || title.contains("game") || title.contains("match") || title.contains("tournament")) tags.add("sports");
+        
+        // Add trending topics
+        if (title.contains("ai") || title.contains("artificial intelligence")) tags.add("ai");
+        if (title.contains("climate") || title.contains("global warming")) tags.add("climate");
+        if (title.contains("space") || title.contains("nasa") || title.contains("planet")) tags.add("space");
         
         // Ensure we have at least one tag
         if (tags.isEmpty()) tags.add("news");
         
         return tags.toArray(new String[0]);
+    }
+    
+    private String getImageForArticle(NewsArticle article, int index) {
+        // Use themed placeholder images based on category
+        String[] placeholders = {
+            "https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?w=400&h=200&fit=crop", // News
+            "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=200&fit=crop", // Tech
+            "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=200&fit=crop", // Business
+            "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=400&h=200&fit=crop", // Environment
+            "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=200&fit=crop", // Science
+        };
+        
+        // Match image to primary tag
+        String[] tags = extractTags(article);
+        if (tags.length > 0) {
+            String primaryTag = tags[0];
+            switch (primaryTag) {
+                case "tech": return placeholders[1];
+                case "business": return placeholders[2];
+                case "environment": return placeholders[3];
+                case "science": return placeholders[4];
+                default: return placeholders[0];
+            }
+        }
+        
+        return placeholders[index % placeholders.length];
     }
     
     private String enhanceDescription(String description) {
