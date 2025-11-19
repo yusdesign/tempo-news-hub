@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
         Calendar calendar = Calendar.getInstance();
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         if (hour >= 5 && hour < 12) return "🌅";
-        else if (hour >= 12 && < 18) return "☀️"; 
+        else if (hour >= 12 && hour < 18) return "☀️"; 
         else return "🌙";
     }
 
